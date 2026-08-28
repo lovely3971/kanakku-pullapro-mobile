@@ -26,15 +26,13 @@
 
 /* FINAL RESPONSIVE: Mobile+iPad keep approved view; Laptop/System >=1200px */
 @media (min-width:1200px){
-  html,body{min-height:100%;}
-  body{padding:16px 24px;align-items:flex-start;background:radial-gradient(circle at 10% 18%,rgba(143,212,0,.10),transparent 26%),radial-gradient(circle at 90% 18%,rgba(143,212,0,.10),transparent 26%),#050805;}
-  .screen{width:min(100%,900px);max-width:900px;margin:0 auto;}
-  /* System/Laptop: portrait artwork must fit inside the monitor height, never become a giant mobile page. */
-  #screenActivate,#screenShop{width:min(460px,calc((100vh - 32px) * .666667),calc(100vw - 48px));max-width:460px;margin:0 auto;border-radius:18px;overflow:hidden;box-shadow:0 18px 58px rgba(0,0,0,.42);}
-  #screenActivate .design,#screenShop .design{width:100%;height:auto;display:block;}
-  #activationCode{font-size:clamp(16px,1.25vw,22px);}
-  .realtab span{font-size:clamp(11px,.9vw,14px);}
-  #realBackBtn span{font-size:clamp(14px,1.05vw,18px);}
+  body{padding:24px 32px;align-items:flex-start;background:radial-gradient(circle at 10% 18%,rgba(143,212,0,.10),transparent 26%),radial-gradient(circle at 90% 18%,rgba(143,212,0,.10),transparent 26%),#050805;}
+  .screen{width:680px;max-width:680px;margin:0 auto;}
+  #screenActivate,#screenShop{border-radius:20px;overflow:hidden;box-shadow:0 22px 70px rgba(0,0,0,.38);}
+  .design{width:100%;height:auto;display:block;}
+  #activationCode{font-size:clamp(18px,1.65vw,26px);}
+  .realtab span{font-size:clamp(12px,1.1vw,16px);}
+  #realBackBtn span{font-size:clamp(16px,1.45vw,22px);}
 }
 /* ===== CREATE SHOP SCREEN (scoped) ===== */
 #screenCreateShop{background:#050805}
@@ -79,23 +77,12 @@
 #screenCreateShop .csHidden{display:none!important}
 #screenCreateShop .csFooter{text-align:center;color:#788275;font-size:10.5px;margin-top:16px}
 @media(min-width:1200px){
-  #screenCreateShop{width:min(900px,calc(100vw - 48px));max-width:900px;margin:0 auto;}
-  #screenCreateShop .csPage{min-height:0;max-width:900px;margin:0 auto;border-radius:20px;overflow:hidden;box-shadow:0 20px 64px rgba(0,0,0,.38);background:linear-gradient(180deg,#071007 0 170px,#f5f8f3 170px 100%)}
-  #screenCreateShop .csTop{padding:18px 16px 15px}
-  #screenCreateShop .csBrand{font-size:25px}
-  #screenCreateShop .csCard{margin:0 24px 22px;border-radius:18px}
-  #screenCreateShop .csBanner{padding:13px 18px}
-  #screenCreateShop .csBanner h1{font-size:19px}
-  #screenCreateShop .csSteps{padding:12px 22px 4px}
-  #screenCreateShop .csStep{padding:9px}
-  #screenCreateShop .csBody{padding:15px 22px 18px}
-  #screenCreateShop .csTitle{margin-bottom:11px;font-size:16px}
-  #screenCreateShop .csGrid{gap:10px 14px}
-  #screenCreateShop input,#screenCreateShop textarea,#screenCreateShop select{padding:10px 11px;font-size:13px;border-radius:10px}
-  #screenCreateShop textarea{min-height:58px}
-  #screenCreateShop .csActions{margin-top:14px}
-  #screenCreateShop .csBtn{padding:11px 14px}
-  #screenCreateShop .csFooter{margin-top:10px}
+  #screenCreateShop .csPage{max-width:1120px;margin:0 auto;border-radius:22px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.38);
+    background:linear-gradient(180deg,#071007 0 250px,#f5f8f3 250px 100%)}
+  #screenCreateShop .csCard{margin:0 34px 34px}
+  #screenCreateShop .csBody{padding:24px 30px 28px}
+  #screenCreateShop .csSteps{padding:20px 30px 6px}
+  #screenCreateShop .csGrid{gap:16px 18px}
 }
 
 /* ===== JOIN SHOP SCREEN (scoped) ===== */
@@ -678,7 +665,6 @@ body[data-kp-light-theme="1"] tr:hover td{background:rgba(var(--accent-rgb),.06)
 @media print{#billActionOverlay .bill-paper.thermal-paper .thermal-items-grid{width:100%!important}#billActionOverlay .bill-paper.thermal-paper .thermal-item-head,#billActionOverlay .bill-paper.thermal-paper .thermal-item-row{display:grid!important;grid-template-columns:minmax(0,1.55fr) .48fr .86fr 1fr!important}}
 </style>
 <style id="kpBarcodeDesignerStyles">
-#bulkBarcodeProduct,#barcodeProductSelect{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .barcode-pro-grid{align-items:start}.barcode-preview-card{position:sticky;top:14px}.barcode-design-lock{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;border:1px solid var(--border);border-radius:14px;background:var(--surface2)}.barcode-design-lock small{display:block;color:var(--text-faint);margin-top:3px}.barcode-help{font-size:12px;color:var(--text-faint);line-height:1.5}.barcode-chips{display:flex;flex-wrap:wrap;gap:7px}.barcode-chip{min-height:34px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-weight:800}.barcode-chip.active{background:var(--primary);color:#fff}.barcode-selected{margin:12px 0;text-align:center;font-size:12px}.barcode-pad{width:190px;margin:8px auto;display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}.barcode-pad button{min-height:44px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);font-weight:900;font-size:18px}.barcode-pad button:nth-child(1){grid-column:2}.barcode-pad button:nth-child(2){grid-column:1}.barcode-pad button:nth-child(3){grid-column:2;font-size:10px}.barcode-pad button:nth-child(4){grid-column:3}.barcode-pad button:nth-child(5){grid-column:2}.barcode-size-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:12px}.barcode-size-row>div{display:flex;gap:8px;align-items:center}.barcode-preview-pro{overflow-x:auto;background:#eef2f7;border:1px solid var(--border);border-radius:14px;padding:12px}.barcode-sheet-pro{width:115mm;min-width:115mm;display:grid;grid-template-columns:35mm 35mm 35mm;column-gap:5mm;background:#fff}.kp-label{width:35mm;height:22mm;box-sizing:border-box;background:#fff;border:1px solid #cbd5e1;padding:1mm 1.3mm .6mm;overflow:hidden;display:flex;flex-direction:column;align-items:center;font-family:Arial,sans-serif;position:relative}.kp-el{position:relative;transform-origin:center}.kp-shop{font-size:9pt;font-weight:800;line-height:1;white-space:nowrap;max-width:100%;overflow:hidden}.kp-bars{width:27mm;height:6.2mm;margin:.4mm 0;background:repeating-linear-gradient(90deg,#000 0,#000 .35mm,transparent .35mm,transparent .7mm,#000 .7mm,#000 1.15mm,transparent 1.15mm,transparent 1.55mm)}.kp-code{font-size:6.5pt;font-weight:700;line-height:1}.kp-pcs{align-self:flex-start;font-size:6.5pt;font-weight:800;line-height:1;margin-top:.2mm}.kp-variant{font-size:6pt;line-height:1;min-height:1.5mm}.kp-price{font-size:8pt;font-weight:900;line-height:1;margin-top:.15mm}.barcode-sheet-pro.editing .kp-el{cursor:pointer;outline:1px dashed transparent}.barcode-sheet-pro.editing .kp-el:hover{outline-color:#7c3aed}.barcode-sheet-pro.editing .kp-el.selected{outline:2px solid #f59e0b;background:rgba(245,158,11,.12)}@media(max-width:1000px){.barcode-preview-card{position:static}.barcode-pro-grid{grid-template-columns:1fr!important}}@media print{#page-barcodes .section-title,#page-barcodes>.barcode-pro-grid>div:first-child,#page-barcodes .block-title,#page-barcodes .tip,#sidebar,#topbar{display:none!important}}
 </style>
 <style id="barcodeResetGreenFix">
@@ -728,7 +714,6 @@ body[data-kp-light-theme="1"] tr:hover td{background:rgba(var(--accent-rgb),.06)
  #page-barcodes #jewelTagSettings,#page-barcodes #anyBarcodeSettings{max-width:100%!important}
  #page-barcodes .jewel-settings,#page-barcodes .jewel-grid{width:100%!important}
  #page-barcodes select,#page-barcodes input,#page-barcodes button{max-width:100%}
-#page-barcodes .field{min-width:0;overflow:hidden}#page-barcodes #bulkBarcodeProduct{display:block;width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important}#page-barcodes .grid.g2{min-width:0}
  #page-barcodes .barcode-preview-pro{overflow-x:auto!important;-webkit-overflow-scrolling:touch}
 }
 </style>
@@ -1708,6 +1693,7 @@ function refreshSelects(){
   dl.innerHTML = DB.customers.map(c=>`<option value="${c.name}">`).join('');
   const barcodeSel = document.getElementById('barcodeProductSelect');
   barcodeSel.innerHTML = '<option value="">Select a product</option>'+DB.products.map(p=>`<option value="${p.id}">${p.name} (${p.code})</option>`).join('');
+  if(typeof populateBulkBarcodeProducts==='function') populateBulkBarcodeProducts();
   const barcodeShop=document.getElementById('barcodeShopName'); if(barcodeShop && !barcodeShop.value) barcodeShop.value=(DB.shop.name||'YOUR SHOP');
   const billOpts = document.getElementById('billProductOptions');
   if(billOpts) billOpts.innerHTML = DB.products.map(p=>`<option value="${p.name} (${p.code})"></option>`).join('');
@@ -3379,7 +3365,7 @@ async function kpCloudSave(){const shopId=kpGetCloudShopId();if(!shopId)return;c
 function kpStartCloudSync(){if(kpCloudTimer)clearInterval(kpCloudTimer);kpCloudTimer=setInterval(kpCloudSave,2500)}
 async function kpGenerateInvite(){const shopId=kpGetCloudShopId();if(!shopId){toast('Shop not connected to cloud');return ''}const {data,error}=await kpSb.rpc('generate_shop_invite',{p_shop_id:shopId,p_permissions:{}});if(error){toast(error.message||'Could not generate invite code');return ''}localStorage.setItem('kp_pro_staff_invite_code',data);return data}
 async function kpCompletePendingJoin(){let j={};try{j=JSON.parse(localStorage.getItem('kp_pending_join')||'{}')||{}}catch(e){}if(!j.inviteCode)return false;const {data,error}=await kpSb.rpc('redeem_shop_invite',{p_code:j.inviteCode,p_staff_name:j.staffName,p_mobile:j.mobile});if(error)throw error;localStorage.setItem('kp_pro_joined_staff',JSON.stringify({...j,role:'Staff',joinedAt:new Date().toISOString()}));localStorage.setItem('kp_pro_joined_shop','true');localStorage.removeItem('kp_pending_join');await kpLoadCloudShop(data);kpStartCloudSync();return true}
-async function kpAfterAuthenticated(){let my=await kpGetMyShop();if(!my){if(localStorage.getItem('kp_pending_create_shop')){const id=await kpCreatePendingOwnerShop();if(id)my={shop_id:id,role:'owner'}}else if(localStorage.getItem('kp_pending_join')){await kpCompletePendingJoin();my=await kpGetMyShop()}}if(my&&my.shop_id){await kpLoadCloudShop(my.shop_id);try{await kpSb.rpc('link_pro_device_to_my_shop',{p_device_id:ensureDeviceId()});await kpSb.rpc('refresh_my_pro_device_profile',{p_device_id:ensureDeviceId()})}catch(e){console.warn('PRO device tracking sync:',e)}kpStartCloudSync();return my}return null}
+async function kpAfterAuthenticated(){let my=await kpGetMyShop();if(!my){if(localStorage.getItem('kp_pending_create_shop')){const id=await kpCreatePendingOwnerShop();if(id)my={shop_id:id,role:'owner'}}else if(localStorage.getItem('kp_pending_join')){await kpCompletePendingJoin();my=await kpGetMyShop()}}if(my&&my.shop_id){await kpLoadCloudShop(my.shop_id);kpStartCloudSync();return my}return null}
 function kpShowResetPassword(){let ov=document.getElementById('kpResetOverlay');if(!ov){ov=document.createElement('div');ov.id='kpResetOverlay';ov.style.cssText='position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.86);display:flex;align-items:center;justify-content:center;padding:22px';ov.innerHTML='<div style="width:min(420px,100%);background:#0b0f0b;border:1px solid #6dbd25;border-radius:18px;padding:22px;color:#fff;box-shadow:0 0 35px rgba(111,205,39,.2)"><div style="font-size:22px;font-weight:900;color:#8ee735;margin-bottom:6px">Set New Password</div><div style="font-size:13px;color:#aab4aa;margin-bottom:16px">Enter and confirm your new Kanakku Pulla PRO password.</div><div style="position:relative;margin-bottom:10px"><input id="kpNewPassword" type="password" autocomplete="new-password" placeholder="New Password" style="width:100%;box-sizing:border-box;padding:13px 44px 13px 13px;border-radius:10px;border:1px solid #40513f;background:#050705;color:#fff;font-size:16px"><button type="button" onclick="kpTogglePwd(\'kpNewPassword\',this)" aria-label="Show password" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#9fb09c;padding:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="19" height="19"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button></div><div style="position:relative;margin-bottom:10px"><input id="kpConfirmNewPassword" type="password" autocomplete="new-password" placeholder="Confirm New Password" style="width:100%;box-sizing:border-box;padding:13px 44px 13px 13px;border-radius:10px;border:1px solid #40513f;background:#050705;color:#fff;font-size:16px"><button type="button" onclick="kpTogglePwd(\'kpConfirmNewPassword\',this)" aria-label="Show password" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#9fb09c;padding:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="19" height="19"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button></div><div id="kpResetMsg" style="min-height:18px;margin:9px 0;font-size:13px"></div><button onclick="kpSubmitNewPassword()" style="width:100%;padding:13px;border:0;border-radius:10px;background:#78d329;color:#071007;font-weight:900;font-size:15px">UPDATE PASSWORD</button></div>';document.body.appendChild(ov)}ov.style.display='flex';setTimeout(()=>document.getElementById('kpNewPassword')?.focus(),50)}
 function kpTogglePwd(id,btn){const input=document.getElementById(id);const showing=input.type==='text';input.type=showing?'password':'text';btn.setAttribute('aria-label',showing?'Show password':'Hide password');btn.innerHTML=showing?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="19" height="19"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="19" height="19"><path d="M17.9 17.9A10.9 10.9 0 0112 19c-7 0-11-7-11-7a19.6 19.6 0 015.06-5.94M9.9 4.24A10.6 10.6 0 0112 4c7 0 11 7 11 7a19.6 19.6 0 01-2.88 3.94M14.12 14.12a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/></svg>'}
 async function kpSubmitNewPassword(){const inp=document.getElementById('kpNewPassword'),confirmInp=document.getElementById('kpConfirmNewPassword'),msg=document.getElementById('kpResetMsg');const p=inp.value,cp=confirmInp.value;if(p.length<6){msg.style.color='#ff7676';msg.textContent='Password must be at least 6 characters.';return}if(p!==cp){msg.style.color='#ff7676';msg.textContent='Passwords do not match.';confirmInp.focus();return}const {error}=await kpSb.auth.updateUser({password:p});if(error){msg.style.color='#ff7676';msg.textContent=error.message;return}msg.style.color='#8ee735';msg.textContent='Password updated successfully.';setTimeout(()=>{document.getElementById('kpResetOverlay').style.display='none';showScreen('login')},900)}
@@ -3416,7 +3402,7 @@ function toggleCodeVisibility(){
   input.type = input.type==='password' ? 'text' : 'password';
 }
 
-async function activateDevice(){const input=document.getElementById('activationCode');const code=input.value.trim();const field=document.getElementById('codeField');if(!code){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast('Please enter your Activation Code');return}const s=loadState();const deviceId=ensureDeviceId();toast('Checking activation code...');const {data,error}=await kpSb.rpc('activate_pro_device',{p_code:code,p_device_id:deviceId,p_device_name:(navigator.userAgentData&&navigator.userAgentData.platform)||navigator.platform||'Unknown Device',p_platform:navigator.platform||'Web',p_user_agent:navigator.userAgent||''});if(error||!data||!data.ok){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast((data&&data.error)||'Activation failed');return}s.activated=true;s.activationCode=code;s.deviceId=deviceId;saveState(s);refreshActivationUI();toast('Device activated successfully');setTimeout(()=>showScreen('shop'),450)}
+async function activateDevice(){const input=document.getElementById('activationCode');const code=input.value.trim();const field=document.getElementById('codeField');if(!code){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast('Please enter your Activation Code');return}const s=loadState();const deviceId=ensureDeviceId();toast('Checking activation code...');const {data,error}=await kpSb.rpc('verify_activation',{p_code:code,p_device_id:deviceId});if(error||!data||!data.ok){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast((data&&data.error)||'Activation failed');return}s.activated=true;s.activationCode=code;s.deviceId=deviceId;saveState(s);refreshActivationUI();toast('Device activated successfully');setTimeout(()=>showScreen('shop'),450)}
 
 function logoutDevice(){
   const s=loadState();
@@ -3576,21 +3562,6 @@ $('jsStaffMobile').addEventListener('input',e=>{
 });
 
 async function jsJoinShop(){const msg=$('jsMessage');msg.className='jsMessage';msg.textContent='';const inviteCode=$('jsInviteCode').value.trim(),staffName=$('jsStaffName').value.trim(),mobile=$('jsStaffMobile').value.trim(),email=$('jsStaffEmail').value.trim().toLowerCase();if(!inviteCode){msg.className='jsMessage err';msg.textContent='Please enter the Shop Invite Code.';$('jsInviteCode').focus();return}if(!staffName){msg.className='jsMessage err';msg.textContent='Please enter Staff Name.';$('jsStaffName').focus();return}if(mobile.length!==10){msg.className='jsMessage err';msg.textContent='Please enter a valid 10 digit Mobile Number.';$('jsStaffMobile').focus();return}if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){msg.className='jsMessage err';msg.textContent='Please enter a valid Email ID.';$('jsStaffEmail').focus();return}localStorage.setItem('kp_pending_join',JSON.stringify({inviteCode,staffName,mobile,email}));try{await kpSb.auth.signOut()}catch(e){}msg.className='jsMessage ok';msg.textContent='Sending secure sign-in link...';const {error}=await kpSb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});if(error){msg.className='jsMessage err';msg.textContent=error.message;return}msg.className='jsMessage ok';msg.textContent='Secure sign-in email sent. Open the link on this device to join the shop.'}
-/* ===== SYSTEM KEYBOARD SUPPORT: onboarding / auth screens ===== */
-(function(){
-  function visible(el){if(!el||el.disabled)return false;const r=el.getBoundingClientRect();const st=getComputedStyle(el);return r.width>0&&r.height>0&&st.display!=='none'&&st.visibility!=='hidden';}
-  function controls(){return Array.from(document.querySelectorAll('.screen.active input:not([type="hidden"]),.screen.active select,.screen.active textarea,.screen.active button:not(.csPwdEye):not(.lpEye)')).filter(visible);}
-  function next(el,step){const a=controls(),i=a.indexOf(el),n=a[i+step];if(n){n.focus();if(n.select&&/^(INPUT|TEXTAREA)$/.test(n.tagName))try{n.select()}catch(e){}}}
-  document.addEventListener('keydown',function(e){
-    const t=e.target;if(!t)return;
-    if(e.key==='Escape'){if(document.getElementById('kpResetOverlay')?.style.display==='flex'){document.getElementById('kpResetOverlay').style.display='none';return;}}
-    if(e.key==='Enter'){
-      if(t.tagName==='TEXTAREA')return;
-      if(t.tagName==='BUTTON'){e.preventDefault();t.click();return;}
-      if(t.matches('input,select') && t.id!=='activationCode' && t.id!=='lpPassword'){e.preventDefault();next(t,1);return;}
-    }
-  },true);
-})();
 kpSb.auth.onAuthStateChange((event,session)=>{if(event==='PASSWORD_RECOVERY'){setTimeout(kpShowResetPassword,100);return}if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session){setTimeout(async()=>{try{if(localStorage.getItem('kp_pending_join')){await kpCompletePendingJoin();localStorage.setItem('kp_pro_owner_logged_in','true');openFullBillingApp()}else if(localStorage.getItem('kp_pending_create_shop')){const my=await kpAfterAuthenticated();if(my)localStorage.setItem('kp_pro_owner_logged_in','true')}}catch(e){console.error(e)}},150)}});
 
 </script>
