@@ -1,4 +1,4 @@
-const CACHE='kanakku-pulla-pro-v1';
+const CACHE='kanakku-pulla-pro-v20260828-desktop-keyboard-tracking';
 const CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
