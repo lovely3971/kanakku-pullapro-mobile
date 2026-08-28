@@ -3559,6 +3559,8 @@ $('jsStaffMobile').addEventListener('input',e=>{
 });
 
 async function jsJoinShop(){const msg=$('jsMessage');msg.className='jsMessage';msg.textContent='';const inviteCode=$('jsInviteCode').value.trim(),staffName=$('jsStaffName').value.trim(),mobile=$('jsStaffMobile').value.trim(),email=$('jsStaffEmail').value.trim().toLowerCase();if(!inviteCode){msg.className='jsMessage err';msg.textContent='Please enter the Shop Invite Code.';$('jsInviteCode').focus();return}if(!staffName){msg.className='jsMessage err';msg.textContent='Please enter Staff Name.';$('jsStaffName').focus();return}if(mobile.length!==10){msg.className='jsMessage err';msg.textContent='Please enter a valid 10 digit Mobile Number.';$('jsStaffMobile').focus();return}if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){msg.className='jsMessage err';msg.textContent='Please enter a valid Email ID.';$('jsStaffEmail').focus();return}localStorage.setItem('kp_pending_join',JSON.stringify({inviteCode,staffName,mobile,email}));try{await kpSb.auth.signOut()}catch(e){}msg.className='jsMessage ok';msg.textContent='Sending secure sign-in link...';const {error}=await kpSb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});if(error){msg.className='jsMessage err';msg.textContent=error.message;return}msg.className='jsMessage ok';msg.textContent='Secure sign-in email sent. Open the link on this device to join the shop.'}
+kpSb.auth.onAuthStateChange((event,session)=>{if(event==='PASSWORD_RECOVERY'){setTimeout(kpShowResetPassword,100);return}if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session){setTimeout(async()=>{try{if(localStorage.getItem('kp_pending_join')){await kpCompletePendingJoin();localStorage.setItem('kp_pro_owner_logged_in','true');openFullBillingApp()}else if(localStorage.getItem('kp_pending_create_shop')){const my=await kpAfterAuthenticated();if(my)localStorage.setItem('kp_pro_owner_logged_in','true')}}catch(e){console.error(e)}},150)}});
+
 </script>
 <script>
 if('serviceWorker' in navigator){
@@ -3567,6 +3569,4 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
-</body></html
-kpSb.auth.onAuthStateChange((event,session)=>{if(event==='PASSWORD_RECOVERY'){setTimeout(kpShowResetPassword,100);return}if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session){setTimeout(async()=>{try{if(localStorage.getItem('kp_pending_join')){await kpCompletePendingJoin();localStorage.setItem('kp_pro_owner_logged_in','true');openFullBillingApp()}else if(localStorage.getItem('kp_pending_create_shop')){const my=await kpAfterAuthenticated();if(my)localStorage.setItem('kp_pro_owner_logged_in','true')}}catch(e){console.error(e)}},150)}});
->
+</body></html>
