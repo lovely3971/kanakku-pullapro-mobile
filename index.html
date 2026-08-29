@@ -3461,7 +3461,18 @@ function toggleCodeVisibility(){
   input.type = input.type==='password' ? 'text' : 'password';
 }
 
-async function activateDevice(){const input=document.getElementById('activationCode');const code=input.value.trim();const field=document.getElementById('codeField');if(!code){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast('Please enter your Activation Code');return}const s=loadState();const deviceId=ensureDeviceId();toast('Checking activation code...');const {data,error}=await kpSb.rpc('verify_activation',{p_code:code,p_device_id:deviceId});if(error||!data||!data.ok){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast((data&&data.error)||'Activation failed');return}s.activated=true;s.activationCode=code;s.deviceId=deviceId;saveState(s);refreshActivationUI();toast('Device activated successfully');setTimeout(()=>showScreen('shop'),450)}
+
+async function kpRecordLoginLocation(){
+  try{
+    const s=loadState(), code=s.activationCode||'', deviceId=s.deviceId||ensureDeviceId();
+    if(!code||!deviceId)return;
+    const r=await fetch('/api/location',{cache:'no-store'}); if(!r.ok)return;
+    const loc=await r.json();
+    await kpSb.rpc('kpro_record_device_location',{p_code:code,p_device_id:deviceId,p_city:loc.city||'',p_state:loc.state||'',p_country:loc.country||'',p_ip:loc.ip||''});
+  }catch(e){}
+}
+
+async function activateDevice(){const input=document.getElementById('activationCode');const code=input.value.trim();const field=document.getElementById('codeField');if(!code){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast('Please enter your Activation Code');return}const s=loadState();const deviceId=ensureDeviceId();toast('Checking activation code...');const {data,error}=await kpSb.rpc('verify_activation',{p_code:code,p_device_id:deviceId});if(error||!data||!data.ok){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast((data&&data.error)||'Activation failed');return}s.activated=true;s.activationCode=code;s.deviceId=deviceId;saveState(s);kpRecordLoginLocation();refreshActivationUI();toast('Device activated successfully');setTimeout(()=>showScreen('shop'),450)}
 
 function logoutDevice(){
   const s=loadState();
@@ -3603,7 +3614,7 @@ function lpTogglePwd(){
   const showing=input.type==='text'; input.type=showing?'password':'text';
   btn.setAttribute('aria-label',showing?'Show password':'Hide password');
 }
-async function lpLogin(){const msg=$('lpMessage');msg.className='lpMsg';msg.textContent='';const email=$('lpEmail').value.trim().toLowerCase(),password=$('lpPassword').value;if(!email){msg.className='lpMsg err';msg.textContent='Please enter Email ID.';$('lpEmail').focus();return}if(!password){msg.className='lpMsg err';msg.textContent='Please enter Password.';$('lpPassword').focus();return}msg.className='lpMsg ok';msg.textContent='Signing in...';const {error}=await kpSb.auth.signInWithPassword({email,password});if(error){msg.className='lpMsg err';msg.textContent=error.message;return}try{const my=await kpAfterAuthenticated();if(!my)throw new Error('No shop is linked to this account.');kpSetAccessFromShop(my);msg.className='lpMsg ok';msg.textContent='Login Successful';setTimeout(openFullBillingApp,300)}catch(e){msg.className='lpMsg err';msg.textContent=e.message||'Login failed'}}
+async function lpLogin(){const msg=$('lpMessage');msg.className='lpMsg';msg.textContent='';const email=$('lpEmail').value.trim().toLowerCase(),password=$('lpPassword').value;if(!email){msg.className='lpMsg err';msg.textContent='Please enter Email ID.';$('lpEmail').focus();return}if(!password){msg.className='lpMsg err';msg.textContent='Please enter Password.';$('lpPassword').focus();return}msg.className='lpMsg ok';msg.textContent='Signing in...';const {error}=await kpSb.auth.signInWithPassword({email,password});if(error){msg.className='lpMsg err';msg.textContent=error.message;return}try{const my=await kpAfterAuthenticated();if(!my)throw new Error('No shop is linked to this account.');kpSetAccessFromShop(my);kpRecordLoginLocation();msg.className='lpMsg ok';msg.textContent='Login Successful';setTimeout(openFullBillingApp,300)}catch(e){msg.className='lpMsg err';msg.textContent=e.message||'Login failed'}}
 async function lpForgotPassword(){const msg=$('lpMessage'),email=$('lpEmail').value.trim().toLowerCase();msg.className='lpMsg';msg.textContent='';if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){msg.className='lpMsg err';msg.textContent='Enter your Email ID first.';$('lpEmail').focus();return}msg.className='lpMsg ok';msg.textContent='Sending reset email...';const {error}=await kpSb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname+'?recovery=1'});if(error){msg.className='lpMsg err';msg.textContent=error.message;return}msg.className='lpMsg ok';msg.textContent='Password reset email sent. Check your inbox.'}
 function lpLoadDashboard(){
   let p={}; try{p=JSON.parse(localStorage.getItem('kp_pro_shop_profile')||'{}')}catch(e){}
