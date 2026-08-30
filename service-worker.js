@@ -1,5 +1,5 @@
-const CACHE='kanakku-pulla-pro-v2-nav-refresh';
-const CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
+const CACHE='kanakku-pulla-pro-v3-optimized-assets';
+const CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./activate-design.webp','./shop-design.webp','./refresh-buffer-logo.jpeg'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
   self.skipWaiting();
