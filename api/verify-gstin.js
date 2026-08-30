@@ -25,19 +25,27 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    const addr = data.pradr && data.pradr.addr;
+    // gstinapi.in's official docs show flat snake_case fields (legal_name, trade_name,
+    // address) — but we keep older camelCase variants as fallback too, in case the
+    // live response differs from docs for some accounts/tiers.
+    const payload = data.data || data; // unwrap if ever nested under "data"
+
+    const addr = payload.pradr && payload.pradr.addr;
+    const addrFromParts = addr ? [addr.bno, addr.st, addr.loc, addr.dst, addr.pncd].filter(Boolean).join(', ') : '';
 
     // GSTIN's first 2 digits are the official state code — most reliable source for state name.
     const STATE_CODES = {'01':'Jammu and Kashmir','02':'Himachal Pradesh','03':'Punjab','04':'Chandigarh','05':'Uttarakhand','06':'Haryana','07':'Delhi','08':'Rajasthan','09':'Uttar Pradesh','10':'Bihar','11':'Sikkim','12':'Arunachal Pradesh','13':'Nagaland','14':'Manipur','15':'Mizoram','16':'Tripura','17':'Meghalaya','18':'Assam','19':'West Bengal','20':'Jharkhand','21':'Odisha','22':'Chhattisgarh','23':'Madhya Pradesh','24':'Gujarat','26':'Dadra and Nagar Haveli and Daman and Diu','27':'Maharashtra','28':'Andhra Pradesh','29':'Karnataka','30':'Goa','31':'Lakshadweep','32':'Kerala','33':'Tamil Nadu','34':'Puducherry','35':'Andaman and Nicobar Islands','36':'Telangana','37':'Andhra Pradesh','38':'Ladakh'};
 
-    // Normalize the fields the billing app's verifyAndFetchGSTIN() expects.
+    // Normalize the fields the billing app's verifyAndFetchGSTIN() expects, trying every
+    // field-name variant seen across GST API providers.
     res.status(200).json({
       ok: true,
-      legalName: data.lgnm || data.legal_name || '',
-      tradeName: data.tradeNam || data.trade_name || '',
-      status: data.sts || data.status || '',
-      state: STATE_CODES[gstin.slice(0, 2)] || '',
-      address: addr ? [addr.bno, addr.st, addr.loc, addr.dst, addr.pncd].filter(Boolean).join(', ') : (data.address || '')
+      legalName: payload.legal_name || payload.legalName || payload.lgnm || payload.name || '',
+      tradeName: payload.trade_name || payload.tradeName || payload.tradeNam || '',
+      status: payload.status || payload.sts || '',
+      state: payload.state || payload.state_jurisdiction || STATE_CODES[gstin.slice(0, 2)] || '',
+      address: payload.address || payload.addr || addrFromParts || '',
+      _raw: payload // temporary — remove once fields are confirmed working
     });
   } catch (e) {
     res.status(500).json({ ok: false, error: 'Verification service unavailable, try again' });
