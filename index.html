@@ -145,11 +145,13 @@
 }
 #screenBillingApp.active{display:block}
 #billingAppFrame{display:block;width:100%;height:100%;border:0;background:#050805}
-#kpBillingFloatNav{display:none;position:fixed;left:14px;right:14px;bottom:max(12px,env(safe-area-inset-bottom));z-index:5100;grid-template-columns:1fr 1fr;gap:12px;pointer-events:none}
+#kpBillingFloatNav{display:none;position:fixed;left:50%;bottom:max(5px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:5100;grid-template-columns:1fr 1fr;gap:8px;width:min(360px,82vw);pointer-events:none}
 #screenBillingApp.active #kpBillingFloatNav{display:grid}
-.kpBillingFloatBtn{pointer-events:auto;min-height:52px;border:1px solid rgba(150,170,150,.35);border-radius:18px;background:rgba(250,252,250,.96);color:#174f27;font:900 16px/1 system-ui,-apple-system,Arial,sans-serif;box-shadow:0 7px 22px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;gap:9px;-webkit-tap-highlight-color:transparent}
+.kpBillingFloatBtn{pointer-events:auto;min-height:42px;border:1px solid rgba(150,170,150,.32);border-radius:14px;background:rgba(250,252,250,.96);color:#174f27;font:900 14px/1 system-ui,-apple-system,Arial,sans-serif;box-shadow:0 5px 16px rgba(0,0,0,.24);display:flex;align-items:center;justify-content:center;gap:7px;-webkit-tap-highlight-color:transparent}
 .kpBillingFloatBtn:active{transform:scale(.985)}
-@media(min-width:768px){#kpBillingFloatNav{left:50%;right:auto;transform:translateX(-50%);width:min(560px,70vw)}}
+@media(min-width:768px){#kpBillingFloatNav{width:min(420px,48vw)}}
+#kpRefreshBuffer .kp-spin{width:42px;height:42px;border:4px solid rgba(183,255,34,.18);border-top-color:#b7ff22;border-right-color:#70d900;border-radius:50%;animation:kpSpin .72s linear infinite;box-shadow:0 0 18px rgba(150,255,0,.18)}
+@keyframes kpSpin{to{transform:rotate(360deg)}}
 
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -574,7 +576,7 @@ h3.block-title{font-size:14px;color:var(--accent);margin:0 0 12px;display:flex;a
 .theme-current{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border-radius:999px;background:rgba(var(--accent-rgb),.1);color:var(--accent);font-size:11px;font-weight:800}
 
 /* Light-theme compatibility for common UI surfaces only. Physical label preview/print remains isolated below. */
-body{transition:background-color .18s,color .18s}.card,.stat,.nav-btn,.side-menu,.help-box,.table-wrap{transition:background .18s,border-color .18s,color .18s}
+body{transition:background-color .18s,color .18s;padding-bottom:64px!important}.card,.stat,.nav-btn,.side-menu,.help-box,.table-wrap{transition:background .18s,border-color .18s,color .18s}
 
 /* ===== 12 THEME HIGH-CONTRAST READABILITY FIX ===== */
 /* Theme-aware form surfaces: prevents dark text on dark boxes in light themes. */
@@ -3720,8 +3722,8 @@ function kpShowRefreshBuffer(show){
   if(!ov){
     ov=document.createElement('div');
     ov.id='kpRefreshBuffer';
-    ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#b7ff00;font:800 14px Arial,sans-serif;letter-spacing:.7px';
-    ov.innerHTML='<img src="refresh-buffer-logo.jpeg" alt="Kanakku Pulla PRO" style="width:112px;height:112px;object-fit:cover;border-radius:24px;box-shadow:0 0 30px rgba(150,255,0,.35)"><div>Refreshing Kanakku Pulla PRO…</div>';
+    ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.86);display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px';
+    ov.innerHTML='<img src="refresh-buffer-logo.jpeg" alt="Kanakku Pulla PRO" style="width:104px;height:104px;object-fit:cover;border-radius:22px;box-shadow:0 0 32px rgba(150,255,0,.32)"><div class="kp-spin" aria-label="Loading"></div>';
     document.body.appendChild(ov);
   }
   ov.style.display=show?'flex':'none';
