@@ -2315,7 +2315,7 @@ async function deleteBill(id){
 
 
 /* ============ GSTIN VALIDATION / FUTURE AUTO FETCH ============ */
-const GST_LOOKUP_ENDPOINT = ''; // Connect secure API endpoint after deployment. Never place provider secret keys in this HTML.
+const GST_LOOKUP_ENDPOINT = '/api/verify-gstin'; // Secure server-side proxy — provider key lives in Vercel env var GSTIN_API_KEY, never in this HTML.
 function normalizeGSTIN(v){ return String(v||'').toUpperCase().replace(/\s+/g,'').slice(0,15); }
 function isValidGSTIN(v){
   v=normalizeGSTIN(v);
