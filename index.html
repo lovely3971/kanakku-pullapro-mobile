@@ -180,7 +180,7 @@
   <span>Join Shop</span>
 </button>
 <div id="oldCtaCover"></div>
-<button id="realBackBtn" onclick="showScreen('activate')">
+<button id="realBackBtn" onclick="kpBackFromShop()">
   <span class="circ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M14 6l-6 6 6 6"/></svg></span>
   <span>Back to Activation</span>
 </button>
@@ -3488,7 +3488,22 @@ function ensureDeviceId(){
 
 function refreshActivationUI(){
   const s=loadState();
-  ensureDeviceId();
+  const deviceId=ensureDeviceId();
+  // Durable local marker: once this exact browser/device has been activated,
+  // normal navigation, refresh, logout/login or app reopen must not forget it.
+  if(s.activated && s.activationCode){
+    try{localStorage.setItem('kp_pro_device_activated_v1','1')}catch(e){}
+    const input=document.getElementById('activationCode');
+    if(input && !input.value) input.value=s.activationCode;
+  }
+  return {activated:!!s.activated,deviceId};
+}
+
+function kpBackFromShop(){
+  const s=loadState();
+  // "Back to Activation" is only meaningful before first activation.
+  // After activation, return to the shop selector instead of exposing activation again.
+  showScreen(s.activated ? 'shop' : 'activate');
 }
 
 function toggleCodeVisibility(){
@@ -3569,15 +3584,19 @@ function kpRenderTrialTimer(){
 }
 setInterval(kpRenderTrialTimer,1000);
 
-async function activateDevice(){const input=document.getElementById('activationCode');const code=input.value.trim();const field=document.getElementById('codeField');if(!code){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast('Please enter your Activation Code');return}const s=loadState();const deviceId=ensureDeviceId();toast('Checking activation code...');const {data,error}=await kpSb.rpc('verify_activation',{p_code:code,p_device_id:deviceId});if(error||!data||!data.ok){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast((data&&data.error)||'Activation failed');return}s.activated=true;s.activationCode=code;s.deviceId=deviceId;kpApplyActivationMeta(s,data);saveState(s);await kpRecordLoginLocation();refreshActivationUI();kpRenderTrialTimer();toast('Device activated successfully');setTimeout(()=>showScreen('shop'),450)}
+async function activateDevice(){const input=document.getElementById('activationCode');const code=input.value.trim();const field=document.getElementById('codeField');if(!code){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast('Please enter your Activation Code');return}const s=loadState();const deviceId=ensureDeviceId();toast('Checking activation code...');const {data,error}=await kpSb.rpc('verify_activation',{p_code:code,p_device_id:deviceId});if(error||!data||!data.ok){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast((data&&data.error)||'Activation failed');return}s.activated=true;s.activationCode=code;s.deviceId=deviceId;kpApplyActivationMeta(s,data);saveState(s);try{localStorage.setItem('kp_pro_device_activated_v1','1')}catch(e){};await kpRecordLoginLocation();refreshActivationUI();kpRenderTrialTimer();toast('Device activated successfully');setTimeout(()=>showScreen('shop'),450)}
 
 function logoutDevice(){
+  // Device activation is permanent until the backend explicitly disables,
+  // expires or removes this device. Normal logout must never revoke it.
   const s=loadState();
-  s.activated=false;
-  saveState(s);
+  if(s.activated){
+    showScreen('shop');
+    toast('This device remains activated');
+    return;
+  }
   document.getElementById('activationCode').value='';
   refreshActivationUI();
-  toast('Logged out');
 }
 
 function showScreen(name){
@@ -3610,7 +3629,7 @@ async function kpValidateStoredActivation(showMessage=true){
     }
     // Only an explicit backend rejection may revoke local activation.
     if(!data.ok){
-      s.activated=false;saveState(s);showScreen('activate');
+      s.activated=false;saveState(s);try{localStorage.removeItem('kp_pro_device_activated_v1')}catch(e){};showScreen('activate');
       if(showMessage) toast(data.error||'Trial / Activation expired');
       return false;
     }
@@ -3631,6 +3650,9 @@ async function doMainAction(){
 document.getElementById('activationCode').addEventListener('keydown',e=>{if(e.key==='Enter') activateDevice();});
 refreshActivationUI();
 selectTab('login');
+// On every normal open/reopen, an already activated device skips Activation.
+// Backend verification continues silently; only an explicit rejection can revoke it.
+if(loadState().activated && loadState().activationCode){showScreen('shop')}
 setTimeout(()=>{if(loadState().activated)kpValidateStoredActivation(false)},1200);
 setInterval(()=>{if(loadState().activated)kpValidateStoredActivation(true)},300000);
 
@@ -3672,6 +3694,9 @@ async function kpBillingHardRefresh(){
   const btn=document.querySelector('#kpBillingFloatNav .kpBillingFloatBtn:last-child');
   if(btn){btn.disabled=true;btn.innerHTML='↻ <span>Refreshing…</span>'}
   try{await kpCloudSave()}catch(e){}
+  // Remember that Refresh was pressed inside the billing app. After the
+  // newest deployed shell loads, restore the user straight back to billing.
+  try{sessionStorage.setItem('kp_return_to_billing_after_refresh','1')}catch(e){}
   try{
     if('serviceWorker' in navigator){
       const reg=await navigator.serviceWorker.getRegistration();
@@ -3779,6 +3804,31 @@ $('jsStaffMobile').addEventListener('input',e=>{
 
 async function jsJoinShop(){const msg=$('jsMessage');msg.className='jsMessage';msg.textContent='';const inviteCode=$('jsInviteCode').value.trim().toUpperCase(),staffName=$('jsStaffName').value.trim(),mobile=$('jsStaffMobile').value.trim();if(!inviteCode){msg.className='jsMessage err';msg.textContent='Please enter the Shop Invite Code.';$('jsInviteCode').focus();return}if(!staffName){msg.className='jsMessage err';msg.textContent='Please enter Staff Name.';$('jsStaffName').focus();return}if(!/^\d{10}$/.test(mobile)){msg.className='jsMessage err';msg.textContent='Please enter a valid 10 digit Mobile Number.';$('jsStaffMobile').focus();return}msg.className='jsMessage ok';msg.textContent='Joining shop...';localStorage.setItem('kp_pending_join',JSON.stringify({inviteCode,staffName,mobile}));try{await kpSb.auth.signOut()}catch(e){}const rand=((window.crypto&&crypto.randomUUID)?crypto.randomUUID().replace(/-/g,''):(Math.random().toString(36).slice(2)+Date.now().toString(36))).slice(0,20);const hiddenEmail='kpstaff.'+Date.now()+'.'+rand+'@example.com';const hiddenPassword='Kp!'+rand+Math.random().toString(36).slice(2,10)+'9a';const {data,error}=await kpSb.auth.signUp({email:hiddenEmail,password:hiddenPassword,options:{data:{full_name:staffName,kp_staff:true,kp_mobile:mobile}}});if(error){localStorage.removeItem('kp_pending_join');msg.className='jsMessage err';msg.textContent=error.message||'Could not join shop.';return}if(!data||!data.session){localStorage.removeItem('kp_pending_join');msg.className='jsMessage err';msg.textContent='Direct Join needs Email Confirmation OFF in Supabase.';return}try{const my=await kpCompletePendingJoin();kpSetAccessFromShop(my);localStorage.setItem('kp_staff_auth_v1',JSON.stringify({email:hiddenEmail,password:hiddenPassword,createdAt:new Date().toISOString()}));msg.className='jsMessage ok';msg.textContent='Shop Joined Successfully';setTimeout(openFullBillingApp,300)}catch(e){try{await kpSb.auth.signOut()}catch(_){}localStorage.removeItem('kp_pending_join');msg.className='jsMessage err';msg.textContent=e.message||'Could not join shop.'}}
 kpSb.auth.onAuthStateChange((event,session)=>{if(event==='PASSWORD_RECOVERY'){setTimeout(kpShowResetPassword,100);return}if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session){setTimeout(async()=>{try{if(localStorage.getItem('kp_pending_join')){const my=await kpCompletePendingJoin();kpSetAccessFromShop(my);openFullBillingApp()}else if(localStorage.getItem('kp_pending_create_shop')){const my=await kpAfterAuthenticated();if(my)localStorage.setItem('kp_pro_owner_logged_in','true')}}catch(e){console.error(e)}},150)}});
+
+// Refresh from inside Billing must reopen Billing, not fall back to the
+// default Activation screen.  Activation is still verified first and the
+// existing Supabase session/shop access is reused; no auto-login bypass.
+(async function kpRestoreBillingAfterHardRefresh(){
+  let shouldReturn=false;
+  try{shouldReturn=sessionStorage.getItem('kp_return_to_billing_after_refresh')==='1'}catch(e){}
+  if(!shouldReturn)return;
+  try{
+    const ok=await kpValidateStoredActivation(false);
+    if(!ok)return;
+    const {data}=await kpSb.auth.getSession();
+    if(!data||!data.session){showScreen('shop');return;}
+    const my=await kpGetMyShop();
+    if(!my||!my.shop_id){showScreen('shop');return;}
+    kpSetAccessFromShop(my);
+    await kpLoadCloudShop(my.shop_id);
+    kpStartCloudSync();
+    try{sessionStorage.removeItem('kp_return_to_billing_after_refresh')}catch(e){}
+    openFullBillingApp();
+  }catch(e){
+    console.error('Billing refresh restore failed',e);
+    showScreen('shop');
+  }
+})();
 
 </script>
 <script>
