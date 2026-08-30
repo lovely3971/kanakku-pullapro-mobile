@@ -44,8 +44,7 @@ module.exports = async function handler(req, res) {
       tradeName: payload.trade_name || payload.tradeName || payload.tradeNam || '',
       status: payload.status || payload.sts || '',
       state: payload.state || payload.state_jurisdiction || STATE_CODES[gstin.slice(0, 2)] || '',
-      address: payload.address || payload.addr || addrFromParts || '',
-      _raw: payload // temporary — remove once fields are confirmed working
+      address: payload.address || payload.addr || addrFromParts || ''
     });
   } catch (e) {
     res.status(500).json({ ok: false, error: 'Verification service unavailable, try again' });
