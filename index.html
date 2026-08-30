@@ -1680,15 +1680,28 @@ function kpApplyStaffAccess(){
 document.querySelectorAll('#mainNav .nav-btn').forEach(btn=>{
   btn.addEventListener('click',()=>goTo(btn.dataset.page, btn));
 });
-function goTo(page, el){
+window.kpPageHistory=window.kpPageHistory||[];
+window.kpCurrentPage=window.kpCurrentPage||'dashboard';
+function goTo(page, el, fromBack){
   if(!kpAllowedPage(page)){toast('Access not permitted');return;}
+  if(!fromBack && window.kpCurrentPage && window.kpCurrentPage!==page){
+    window.kpPageHistory.push(window.kpCurrentPage);
+    if(window.kpPageHistory.length>30)window.kpPageHistory.shift();
+  }
+  window.kpCurrentPage=page;
   document.querySelectorAll('#mainNav .nav-btn').forEach(b=>b.classList.remove('active'));
-  (el||document.querySelector('#mainNav [data-page="'+page+'"]')).classList.add('active');
+  const target=el||document.querySelector('#mainNav [data-page="'+page+'"]');
+  if(target)target.classList.add('active');
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+page).classList.add('active');
+  const pageEl=document.getElementById('page-'+page);if(pageEl)pageEl.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
   setTimeout(kpRenderTrialTimer,0);
 }
+window.kpInternalBack=function(){
+  let prev=window.kpPageHistory.length?window.kpPageHistory.pop():'dashboard';
+  if(!kpAllowedPage(prev))prev='dashboard';
+  goTo(prev,document.querySelector('#mainNav [data-page="'+prev+'"]'),true);
+};
 function billingView(v, el){
   document.getElementById('billing-list').style.display = v==='list' ? 'block':'none';
   document.getElementById('billing-new').style.display = v==='new' ? 'block':'none';
@@ -3686,30 +3699,87 @@ function kpSyncShopProfileToBilling(){
 async function kpBillingLogout(){try{await kpCloudSave();await kpSb.auth.signOut()}catch(e){}localStorage.removeItem('kp_pro_owner_logged_in');localStorage.removeItem('kp_pro_access_context');kpSetCloudShopId('');if(kpCloudTimer){clearInterval(kpCloudTimer);kpCloudTimer=null}showScreen('shop');try{document.getElementById('lpPassword').value='';document.getElementById('lpMessage').className='lpMsg';document.getElementById('lpMessage').textContent=''}catch(e){}toast('Logged out successfully')}
 
 async function kpBillingBack(){
+  // Back must stay inside the billing software. Never return to Activation/Login.
   try{await kpCloudSave()}catch(e){}
-  showScreen('shop');
+  const frame=document.getElementById('billingAppFrame');
+  try{
+    const w=frame&&frame.contentWindow;
+    if(w&&typeof w.kpInternalBack==='function'){
+      w.kpInternalBack();
+      return;
+    }
+    if(w&&typeof w.goTo==='function'){
+      w.goTo('dashboard',w.document.querySelector('#mainNav [data-page="dashboard"]'),true);
+      return;
+    }
+  }catch(e){}
+}
+
+function kpShowRefreshBuffer(show){
+  let ov=document.getElementById('kpRefreshBuffer');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='kpRefreshBuffer';
+    ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#b7ff00;font:800 14px Arial,sans-serif;letter-spacing:.7px';
+    ov.innerHTML='<img src="refresh-buffer-logo.jpeg" alt="Kanakku Pulla PRO" style="width:112px;height:112px;object-fit:cover;border-radius:24px;box-shadow:0 0 30px rgba(150,255,0,.35)"><div>Refreshing Kanakku Pulla PRO…</div>';
+    document.body.appendChild(ov);
+  }
+  ov.style.display=show?'flex':'none';
 }
 
 async function kpBillingHardRefresh(){
+  // Refresh ONLY the billing software iframe, while pulling the newest deployed
+  // billing template from the server. The user never leaves the current app.
   const btn=document.querySelector('#kpBillingFloatNav .kpBillingFloatBtn:last-child');
   if(btn){btn.disabled=true;btn.innerHTML='↻ <span>Refreshing…</span>'}
+  kpShowRefreshBuffer(true);
   try{await kpCloudSave()}catch(e){}
-  // Remember that Refresh was pressed inside the billing app. After the
-  // newest deployed shell loads, restore the user straight back to billing.
-  try{sessionStorage.setItem('kp_return_to_billing_after_refresh','1')}catch(e){}
+  const frame=document.getElementById('billingAppFrame');
+  let currentPage='dashboard';
+  try{
+    const a=frame.contentDocument&&frame.contentDocument.querySelector('#mainNav .nav-btn.active');
+    if(a&&a.dataset&&a.dataset.page)currentPage=a.dataset.page;
+  }catch(e){}
   try{
     if('serviceWorker' in navigator){
       const reg=await navigator.serviceWorker.getRegistration();
-      if(reg)await reg.update();
+      if(reg)reg.update().catch(()=>{});
     }
-    if('caches' in window){
-      const keys=await caches.keys();
-      await Promise.all(keys.filter(k=>k.indexOf('kanakku-pulla-pro-')===0).map(k=>caches.delete(k)));
-    }
-  }catch(e){}
-  const u=new URL(window.location.href);
-  u.searchParams.set('kp_refresh',Date.now().toString());
-  window.location.replace(u.toString());
+    const u=new URL(window.location.href);
+    u.searchParams.set('kp_refresh',Date.now().toString());
+    const res=await fetch(u.toString(),{cache:'no-store',headers:{'Cache-Control':'no-cache'}});
+    if(!res.ok)throw new Error('Refresh download failed');
+    const latest=await res.text();
+    const doc=new DOMParser().parseFromString(latest,'text/html');
+    const tpl=doc.getElementById('kpBillingTemplate');
+    if(!tpl)throw new Error('Billing template missing');
+    frame.onload=()=>{
+      setTimeout(()=>{
+        try{
+          const w=frame.contentWindow;
+          if(w&&typeof w.goTo==='function'&&currentPage){
+            w.goTo(currentPage,w.document.querySelector('#mainNav [data-page="'+currentPage+'"]'),true);
+          }
+        }catch(e){}
+        kpShowRefreshBuffer(false);
+        if(btn){btn.disabled=false;btn.innerHTML='↻ <span>Refresh</span>'}
+        toast('Billing software refreshed');
+      },120);
+      frame.onload=null;
+    };
+    frame.srcdoc=tpl.innerHTML;
+    kpBillingLoaded=true;
+  }catch(e){
+    console.error('In-app refresh failed',e);
+    // Stay inside the current billing page even if the network refresh fails.
+    try{
+      const w=frame&&frame.contentWindow;
+      if(w&&typeof w.renderAll==='function')w.renderAll();
+    }catch(_){}
+    kpShowRefreshBuffer(false);
+    if(btn){btn.disabled=false;btn.innerHTML='↻ <span>Refresh</span>'}
+    toast('Could not download update. Current page kept open.');
+  }
 }
 
 function openFullBillingApp(){
@@ -3804,31 +3874,6 @@ $('jsStaffMobile').addEventListener('input',e=>{
 
 async function jsJoinShop(){const msg=$('jsMessage');msg.className='jsMessage';msg.textContent='';const inviteCode=$('jsInviteCode').value.trim().toUpperCase(),staffName=$('jsStaffName').value.trim(),mobile=$('jsStaffMobile').value.trim();if(!inviteCode){msg.className='jsMessage err';msg.textContent='Please enter the Shop Invite Code.';$('jsInviteCode').focus();return}if(!staffName){msg.className='jsMessage err';msg.textContent='Please enter Staff Name.';$('jsStaffName').focus();return}if(!/^\d{10}$/.test(mobile)){msg.className='jsMessage err';msg.textContent='Please enter a valid 10 digit Mobile Number.';$('jsStaffMobile').focus();return}msg.className='jsMessage ok';msg.textContent='Joining shop...';localStorage.setItem('kp_pending_join',JSON.stringify({inviteCode,staffName,mobile}));try{await kpSb.auth.signOut()}catch(e){}const rand=((window.crypto&&crypto.randomUUID)?crypto.randomUUID().replace(/-/g,''):(Math.random().toString(36).slice(2)+Date.now().toString(36))).slice(0,20);const hiddenEmail='kpstaff.'+Date.now()+'.'+rand+'@example.com';const hiddenPassword='Kp!'+rand+Math.random().toString(36).slice(2,10)+'9a';const {data,error}=await kpSb.auth.signUp({email:hiddenEmail,password:hiddenPassword,options:{data:{full_name:staffName,kp_staff:true,kp_mobile:mobile}}});if(error){localStorage.removeItem('kp_pending_join');msg.className='jsMessage err';msg.textContent=error.message||'Could not join shop.';return}if(!data||!data.session){localStorage.removeItem('kp_pending_join');msg.className='jsMessage err';msg.textContent='Direct Join needs Email Confirmation OFF in Supabase.';return}try{const my=await kpCompletePendingJoin();kpSetAccessFromShop(my);localStorage.setItem('kp_staff_auth_v1',JSON.stringify({email:hiddenEmail,password:hiddenPassword,createdAt:new Date().toISOString()}));msg.className='jsMessage ok';msg.textContent='Shop Joined Successfully';setTimeout(openFullBillingApp,300)}catch(e){try{await kpSb.auth.signOut()}catch(_){}localStorage.removeItem('kp_pending_join');msg.className='jsMessage err';msg.textContent=e.message||'Could not join shop.'}}
 kpSb.auth.onAuthStateChange((event,session)=>{if(event==='PASSWORD_RECOVERY'){setTimeout(kpShowResetPassword,100);return}if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session){setTimeout(async()=>{try{if(localStorage.getItem('kp_pending_join')){const my=await kpCompletePendingJoin();kpSetAccessFromShop(my);openFullBillingApp()}else if(localStorage.getItem('kp_pending_create_shop')){const my=await kpAfterAuthenticated();if(my)localStorage.setItem('kp_pro_owner_logged_in','true')}}catch(e){console.error(e)}},150)}});
-
-// Refresh from inside Billing must reopen Billing, not fall back to the
-// default Activation screen.  Activation is still verified first and the
-// existing Supabase session/shop access is reused; no auto-login bypass.
-(async function kpRestoreBillingAfterHardRefresh(){
-  let shouldReturn=false;
-  try{shouldReturn=sessionStorage.getItem('kp_return_to_billing_after_refresh')==='1'}catch(e){}
-  if(!shouldReturn)return;
-  try{
-    const ok=await kpValidateStoredActivation(false);
-    if(!ok)return;
-    const {data}=await kpSb.auth.getSession();
-    if(!data||!data.session){showScreen('shop');return;}
-    const my=await kpGetMyShop();
-    if(!my||!my.shop_id){showScreen('shop');return;}
-    kpSetAccessFromShop(my);
-    await kpLoadCloudShop(my.shop_id);
-    kpStartCloudSync();
-    try{sessionStorage.removeItem('kp_return_to_billing_after_refresh')}catch(e){}
-    openFullBillingApp();
-  }catch(e){
-    console.error('Billing refresh restore failed',e);
-    showScreen('shop');
-  }
-})();
 
 </script>
 <script>
