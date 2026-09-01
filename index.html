@@ -152,14 +152,37 @@
 @media(min-width:768px){#kpBillingFloatNav{width:min(420px,48vw)}}
 #kpRefreshBuffer .kp-spin{width:42px;height:42px;border:4px solid rgba(183,255,34,.18);border-top-color:#b7ff22;border-right-color:#70d900;border-radius:50%;animation:kpSpin .72s linear infinite;box-shadow:0 0 18px rgba(150,255,0,.18)}
 @keyframes kpSpin{to{transform:rotate(360deg)}}
+#kpBootGate{position:fixed;inset:0;z-index:999999;background:#050805;display:flex;align-items:center;justify-content:center}
+#kpBootGate .kp-spin{width:42px;height:42px;border:4px solid rgba(183,255,34,.18);border-top-color:#b7ff22;border-right-color:#70d900;border-radius:50%;animation:kpSpin .72s linear infinite;box-shadow:0 0 18px rgba(150,255,0,.18)}
+#kpBootGate.kp-hidden{display:none}
 
+
+<style id="kpDeviceRoleLoginLockV8">
+#screenStaffLogin{background:#050805}
+#kpLogoutConfirm{position:fixed;inset:0;z-index:120000;background:rgba(0,0,0,.76);display:none;align-items:center;justify-content:center;padding:20px}
+#kpLogoutConfirm.active{display:flex}
+#kpLogoutConfirm .kpLogoutBox{width:min(360px,92vw);background:#0b120b;border:1px solid #284728;border-radius:16px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.55);text-align:center;color:#fff;font-family:Arial,sans-serif}
+#kpLogoutConfirm .kpLogoutTitle{font-size:19px;font-weight:900;margin-bottom:8px}
+#kpLogoutConfirm .kpLogoutText{font-size:13px;line-height:1.45;color:#a8b6a4;margin-bottom:18px}
+#kpLogoutConfirm .kpLogoutBtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#kpLogoutConfirm button{border:0;border-radius:12px;padding:13px 12px;font-size:14px;font-weight:900;cursor:pointer}
+#kpLogoutCancel{background:#eef3ee;color:#214321}
+#kpLogoutDo{background:linear-gradient(180deg,#b3f35f,#67bd18);color:#102400}
+body.kp-owner-bound #screenLogin .lpBack{display:none!important}
+body.kp-owner-bound #screenLogin .lpActions{grid-template-columns:1fr!important}
+</style>
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 #kpTrialTimerBar{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;z-index:99999;background:rgba(8,18,8,.96);border:1px solid #9cff00;color:#eaffd2;border-radius:13px;padding:8px 12px;box-shadow:0 8px 28px rgba(0,0,0,.35);font:700 12px/1.25 system-ui,-apple-system,sans-serif;text-align:center;min-width:220px;max-width:92vw;display:none}
 #kpTrialTimerBar b{color:#b7ff22;letter-spacing:.3px}#kpTrialTimerBar .kpTrialEnd{display:block;font-size:10px;font-weight:600;color:#d5dccb;margin-top:2px}
 </style>
+
+<style id="kpTrueBarcodeResizeV6">
+#labelPreviewArea .kp-normal-barcode-box>.kp-bars,#labelPreviewArea .any-barcode-box>.kp-bars{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;}
+</style>
 </head><body>
-<div class="screen active" id="screenActivate">
+<div id="kpBootGate"><div class="kp-spin" aria-label="Loading"></div></div>
+<div class="screen" id="screenActivate">
 <img class="design" src="activate-design.webp" alt="Kanakku Pulla PRO Activation">
 <div id="codeField"><div id="codeFieldBg"></div></div><input type="password" id="activationCode" placeholder="Enter Activation Code" autocomplete="off">
 <button class="hot" id="eyeBtn" onclick="toggleCodeVisibility()" aria-label="Show code"></button>
@@ -199,6 +222,20 @@
       <div style="text-align:right;margin-top:2px;margin-bottom:10px"><button type="button" onclick="lpForgotPassword()" style="border:0;background:transparent;color:#67b91f;font-weight:900;font-size:14px;cursor:pointer;padding:6px 2px;text-decoration:underline;text-underline-offset:3px">Forgot Password?</button></div>
       <div id="lpMessage" class="lpMsg"></div>
       <div class="lpActions"><button class="lpBtn lpBack" type="button" onclick="showScreen('shop')">Back</button><button class="lpBtn lpMain" type="button" onclick="lpLogin()">LOGIN</button></div>
+      <div class="lpFooter">A LOVELY SHOPPE BRAND • BILLING SOFTWARE</div>
+    </div>
+  </div>
+</div></div>
+
+<!-- ============ RETURNING STAFF LOGIN — DEVICE BOUND ============ -->
+<div class="screen" id="screenStaffLogin"><div class="lpPage">
+  <div class="lpTop"><div class="lpBrand">KANAKKU <span class="pulla">PULLA</span><span class="lpPro">PRO</span></div><div class="lpTag">SMART BILLING • EASY BUSINESS</div></div>
+  <div class="lpCard"><div class="lpBanner"><h1>Staff Login</h1><p>Enter your registered staff details to continue.</p></div>
+    <div class="lpBody">
+      <div class="lpField"><label>Staff Name <span style="color:#5eaa17">*</span></label><input id="kpStaffLoginName" autocomplete="name" placeholder="Enter Staff Name"></div>
+      <div class="lpField"><label>Mobile Number <span style="color:#5eaa17">*</span></label><input id="kpStaffLoginMobile" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="10 digit mobile number"></div>
+      <div id="kpStaffLoginMessage" class="lpMsg"></div>
+      <div class="lpActions" style="grid-template-columns:1fr"><button class="lpBtn lpMain" type="button" onclick="kpStaffLogin()">LOGIN</button></div>
       <div class="lpFooter">A LOVELY SHOPPE BRAND • BILLING SOFTWARE</div>
     </div>
   </div>
@@ -343,6 +380,13 @@
   </div>
 </div>
 <div id="toast"></div>
+<div id="kpLogoutConfirm" role="dialog" aria-modal="true" aria-labelledby="kpLogoutTitle">
+  <div class="kpLogoutBox">
+    <div class="kpLogoutTitle" id="kpLogoutTitle">Logout?</div>
+    <div class="kpLogoutText">Are you sure you want to logout from this device?</div>
+    <div class="kpLogoutBtns"><button id="kpLogoutCancel" type="button" onclick="kpCancelLogout()">Cancel</button><button id="kpLogoutDo" type="button" onclick="kpConfirmLogout()">Confirm</button></div>
+  </div>
+</div>
 
 <div id="screenBillingApp">
   <iframe id="billingAppFrame" title="Kanakku Pulla PRO Billing"></iframe>
@@ -766,7 +810,7 @@ body[data-kp-light-theme="1"] tr:hover td{background:rgba(var(--accent-rgb),.06)
 <style id="kpNormal35x22BarcodeAlignmentFix">
 /* Normal 35x22: move/size the barcode wrapper, not the SVG generated by JsBarcode.
    This prevents JsBarcode's SVG dimensions from fighting the mm alignment transform. */
-#labelPreviewArea .kp-label .kp-normal-barcode-box{width:27mm!important;display:block!important;overflow:visible!important;flex:0 0 auto!important;transform-origin:center center!important;margin:.4mm 0!important;}
+#labelPreviewArea .kp-label .kp-normal-barcode-box{display:block!important;overflow:visible!important;flex:0 0 auto!important;transform-origin:center center!important;margin:.4mm 0!important;max-width:32mm!important;}
 #labelPreviewArea .kp-label .kp-normal-barcode-box>.kp-bars{display:block!important;width:100%!important;height:100%!important;margin:0!important;background:none!important;transform:none!important;overflow:visible!important;}
 #labelPreviewArea .kp-label .kp-normal-barcode-box.selected{outline:2px solid #f59e0b!important;background:rgba(245,158,11,.12)!important;}
 </style>
@@ -2636,7 +2680,7 @@ function defaultBarcodeDesign(){const o={};BARCODE_ELS.forEach(([k])=>o[k]={x:0,
 function loadBarcodeDesign(){try{const raw=JSON.parse(localStorage.getItem(barcodeDesignKey())||'{}');const d=defaultBarcodeDesign();Object.keys(raw||{}).forEach(k=>{if(d[k])d[k]={...d[k],...raw[k]};});return d;}catch(e){return defaultBarcodeDesign();}}
 let barcodeDesign=loadBarcodeDesign();
 function saveBarcodeDesign(){try{const type=(typeof currentLabelType==='function'?currentLabelType():'normal');let key=barcodeDesignKey();if(type==='anybarcode'&&typeof anyBarcodeDesignKey==='function')key=anyBarcodeDesignKey();else if(type&&type!=='normal'&&typeof jewelLayoutStorageKey==='function')key=jewelLayoutStorageKey(type);localStorage.setItem(key,JSON.stringify(barcodeDesign));}catch(e){}}
-function barcodeStyle(k){const o=barcodeDesign[k]||{x:0,y:0,sizeMM:BARCODE_BASE_MM[k]};let t=`translate(${Number(o.x||0).toFixed(1)}mm,${Number(o.y||0).toFixed(1)}mm)`;if(k==='barcode'){return `transform:${t};height:${Number(o.sizeMM||6.2).toFixed(1)}mm;`; }return `transform:${t};font-size:${Number(o.sizeMM||BARCODE_BASE_MM[k]).toFixed(1)}mm;`;}
+function barcodeStyle(k){const o=barcodeDesign[k]||{x:0,y:0,sizeMM:BARCODE_BASE_MM[k]};let t=`translate(${Number(o.x||0).toFixed(1)}mm,${Number(o.y||0).toFixed(1)}mm)`;if(k==='barcode'){const h=Math.max(2,Math.min(12,Number(o.sizeMM||6.2)));const w=Math.max(9,Math.min(32,h*4.35));return `transform:${t};width:${w.toFixed(1)}mm;height:${h.toFixed(1)}mm;`; }return `transform:${t};font-size:${Number(o.sizeMM||BARCODE_BASE_MM[k]).toFixed(1)}mm;`;}
 function populateBulkBarcodeProducts(){const sel=document.getElementById('bulkBarcodeProduct');if(!sel)return;sel.innerHTML='<option value="">Select a product</option>'+DB.products.map(p=>`<option value="${p.id}">${p.name} (${p.code||p.sku||''})</option>`).join('');}
 function filterBarcodeProducts(){
   const q=(document.getElementById('barcodeSearch').value||'').toLowerCase();
@@ -2688,7 +2732,7 @@ function renderBarcodeEditor(){
 function editBarcodeDesign(){barcodeEditing=true;document.getElementById('barcodeDesignLocked').style.display='none';document.getElementById('barcodeDesignEditor').style.display='block';renderBarcodeEditor();previewLabelsLive();}
 function saveLockBarcodeDesign(){saveBarcodeDesign();barcodeEditing=false;document.getElementById('barcodeDesignEditor').style.display='none';document.getElementById('barcodeDesignLocked').style.display='flex';previewLabelsLive();toast('Label design saved & locked');}
 function moveBarcodeEl(dir){const o=barcodeDesign[barcodeSelectedEl]||(barcodeDesign[barcodeSelectedEl]={x:0,y:0,sizeMM:BARCODE_BASE_MM[barcodeSelectedEl]});const st=.1;if(dir==='up')o.y=Math.max(-10,o.y-st);if(dir==='down')o.y=Math.min(10,o.y+st);if(dir==='left')o.x=Math.max(-15,o.x-st);if(dir==='right')o.x=Math.min(15,o.x+st);o.x=+o.x.toFixed(1);o.y=+o.y.toFixed(1);renderBarcodeEditor();previewLabelsLive();}
-function sizeBarcodeEl(d){const o=barcodeDesign[barcodeSelectedEl]||(barcodeDesign[barcodeSelectedEl]={x:0,y:0,sizeMM:BARCODE_BASE_MM[barcodeSelectedEl]});const step=.1;o.sizeMM=Math.max(barcodeSelectedEl==='barcode'?2:1,Math.min(barcodeSelectedEl==='barcode'?12:8,Number(o.sizeMM||BARCODE_BASE_MM[barcodeSelectedEl])+d*step));o.sizeMM=+o.sizeMM.toFixed(1);renderBarcodeEditor();previewLabelsLive();}
+function sizeBarcodeEl(d){const o=barcodeDesign[barcodeSelectedEl]||(barcodeDesign[barcodeSelectedEl]={x:0,y:0,sizeMM:BARCODE_BASE_MM[barcodeSelectedEl]});const step=.1;o.sizeMM=Math.max(barcodeSelectedEl==='barcode'?2:1,Math.min(barcodeSelectedEl==='barcode'?14:8,Number(o.sizeMM||BARCODE_BASE_MM[barcodeSelectedEl])+d*step));o.sizeMM=+o.sizeMM.toFixed(1);renderBarcodeEditor();previewLabelsLive();}
 function resetBarcodeEl(){const type=(typeof currentLabelType==='function'?currentLabelType():'normal');let base=defaultBarcodeDesign();if(type==='anybarcode'&&typeof anyBarcodeDefaultDesign==='function')base=anyBarcodeDefaultDesign();else if(type!=='normal'&&typeof jewelDefaultDesign==='function')base=jewelDefaultDesign(type);barcodeDesign[barcodeSelectedEl]={...base[barcodeSelectedEl]};renderBarcodeEditor();previewLabelsLive();}
 function resetAllBarcodeDesign(){const type=(typeof currentLabelType==='function'?currentLabelType():'normal');if(type==='anybarcode'&&typeof anyBarcodeDefaultDesign==='function')barcodeDesign=anyBarcodeDefaultDesign();else barcodeDesign=(type!=='normal'&&typeof jewelDefaultDesign==='function')?jewelDefaultDesign(type):defaultBarcodeDesign();renderBarcodeEditor();previewLabelsLive();}
 let barcodeHoldTimer=null,barcodeHoldDelay=null;
@@ -2716,7 +2760,7 @@ function previewBulkBarcodeLabels(){
   bindPreviewElements();
   if(scroller)scroller.scrollTop=0;
 }
-function printLabelHtml(html){const up=jewelLabelsPerRow();const sheetW=(35*up)+(5*Math.max(0,up-1));const w=window.open('','_blank');if(!w){toast('Allow popups to print labels');return;}w.document.write(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script><style>@page{size:${sheetW}mm auto;margin:0}html,body{margin:0;padding:0;background:#fff}.sheet{width:${sheetW}mm;display:grid;grid-template-columns:repeat(${up},35mm);column-gap:5mm;row-gap:0}.kp-label{width:35mm;height:22mm;box-sizing:border-box;padding:1mm 1.3mm .6mm;overflow:hidden;display:flex;flex-direction:column;align-items:center;font-family:Arial,sans-serif;break-inside:avoid;position:relative}.kp-el{position:relative;transform-origin:center}.kp-shop{font-weight:800;line-height:1;white-space:nowrap}.kp-normal-barcode-box{width:27mm!important;display:block!important;overflow:visible!important;flex:0 0 auto!important;transform-origin:center center!important;margin:.4mm 0!important}.kp-normal-barcode-box>.kp-bars{display:block!important;width:100%!important;height:100%!important;margin:0!important;background:none!important;transform:none!important;overflow:visible!important}.kp-bars rect{shape-rendering:crispEdges}.kp-code{font-weight:700;line-height:1}.kp-pcs{align-self:flex-start;font-weight:800;line-height:1;margin-top:.2mm}.kp-variant{line-height:1;min-height:1.5mm}.kp-price{font-weight:900;line-height:1;margin-top:.15mm}</style></head><body><div class="sheet">${html}</div><script>function draw(){if(typeof JsBarcode==='function'){document.querySelectorAll('svg.kp-bars[data-barcode]').forEach(function(svg){var v=svg.getAttribute('data-barcode')||'';if(v){try{JsBarcode(svg,v,{format:'CODE128',displayValue:false,margin:0,width:2,height:42,lineColor:'#000',background:'#fff'});}catch(e){}}});}setTimeout(function(){window.focus();window.print();},120);}if(document.readyState==='complete')draw();else window.addEventListener('load',draw);<\/script>
+function printLabelHtml(html){const up=jewelLabelsPerRow();const sheetW=(35*up)+(5*Math.max(0,up-1));const w=window.open('','_blank');if(!w){toast('Allow popups to print labels');return;}w.document.write(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script><style>@page{size:${sheetW}mm auto;margin:0}html,body{margin:0;padding:0;background:#fff}.sheet{width:${sheetW}mm;display:grid;grid-template-columns:repeat(${up},35mm);column-gap:5mm;row-gap:0}.kp-label{width:35mm;height:22mm;box-sizing:border-box;padding:1mm 1.3mm .6mm;overflow:hidden;display:flex;flex-direction:column;align-items:center;font-family:Arial,sans-serif;break-inside:avoid;position:relative}.kp-el{position:relative;transform-origin:center}.kp-shop{font-weight:800;line-height:1;white-space:nowrap}.kp-normal-barcode-box{display:block!important;overflow:visible!important;flex:0 0 auto!important;transform-origin:center center!important;margin:.4mm 0!important;max-width:32mm!important}.kp-normal-barcode-box>.kp-bars{display:block!important;width:100%!important;height:100%!important;margin:0!important;background:none!important;transform:none!important;overflow:visible!important}.kp-bars rect{shape-rendering:crispEdges}.kp-code{font-weight:700;line-height:1}.kp-pcs{align-self:flex-start;font-weight:800;line-height:1;margin-top:.2mm}.kp-variant{line-height:1;min-height:1.5mm}.kp-price{font-weight:900;line-height:1;margin-top:.15mm}</style></head><body><div class="sheet">${html}</div><script>function draw(){if(typeof JsBarcode==='function'){document.querySelectorAll('svg.kp-bars[data-barcode]').forEach(function(svg){var v=svg.getAttribute('data-barcode')||'';if(v){try{JsBarcode(svg,v,{format:'CODE128',displayValue:false,margin:0,width:2,height:42,lineColor:'#000',background:'#fff'});}catch(e){}}});}setTimeout(function(){window.focus();window.print();},120);}if(document.readyState==='complete')draw();else window.addEventListener('load',draw);<\/script>
 </body></html>`);w.document.close();}
 function printBarcodeLabels(){if(!selectedBarcodeProduct){toast('Select a product first');return;}const qty=Math.max(1,Math.min(500,parseInt(document.getElementById('labelQty').value||1,10)));printLabelHtml(Array.from({length:qty},()=>barcodeOneLabel(selectedBarcodeProduct)).join(''));}
 function printBulkBarcodeLabels(){
@@ -2727,30 +2771,53 @@ function printBulkBarcodeLabels(){
 }
 
 /* ============ ANY BARCODE LABEL — CUSTOM L / H / W ============ */
-function anyBarcodeDesignKey(){return 'kp_pro_any_barcode_layout_v1';}
-function anyBarcodeDefaultDesign(){const d=defaultBarcodeDesign();d.shop.sizeMM=2.6;d.barcode.sizeMM=6.0;d.code.sizeMM=2.2;d.pcs.sizeMM=1.8;d.variant.sizeMM=1.8;d.price.sizeMM=2.3;return d;}
+function anyBarcodeDesignKey(){return 'kp_pro_any_barcode_layout_v7_sample_match';}
+function anyClamp(v,min,max){return Math.max(min,Math.min(max,v));}
+function anyBarcodeAutoDesign(d){
+  /* V7 SAMPLE-MATCH AUTO FIT: 50x30 uses the user's approved full-looking layout.
+     Every other custom L/H size scales from the same physical proportions. */
+  const scale=anyClamp(Math.min(d.l/50,d.h/30),.45,1.70);
+  return {
+    shop:{x:0,y:0,sizeMM:+anyClamp(4.15*scale,1.7,6.2).toFixed(1)},
+    barcode:{x:0,y:0,sizeMM:+anyClamp(8.35*scale,2.8,13.0).toFixed(1)},
+    code:{x:0,y:0,sizeMM:+anyClamp(3.15*scale,1.3,4.8).toFixed(1)},
+    pcs:{x:0,y:0,sizeMM:+anyClamp(3.05*scale,1.3,4.6).toFixed(1)},
+    variant:{x:0,y:0,sizeMM:+anyClamp(2.95*scale,1.3,4.5).toFixed(1)},
+    price:{x:0,y:0,sizeMM:+anyClamp(4.25*scale,1.7,6.4).toFixed(1)}
+  };
+}
+function anyBarcodeDefaultDesign(){return anyBarcodeAutoDesign(readAnyBarcodeDims());}
 function loadAnyBarcodeDesign(){try{const raw=JSON.parse(localStorage.getItem(anyBarcodeDesignKey())||'null');if(!raw)return anyBarcodeDefaultDesign();const d=anyBarcodeDefaultDesign();Object.keys(raw||{}).forEach(k=>{if(d[k])d[k]={...d[k],...raw[k]};});return d;}catch(e){return anyBarcodeDefaultDesign();}}
 function anyVal(id,def){const n=parseFloat(document.getElementById(id)?.value);return Number.isFinite(n)?n:def;}
 function readAnyBarcodeDims(){return {l:Math.max(15,anyVal('anyLabelLength',50)),h:Math.max(8,anyVal('anyLabelHeight',25)),w:Math.max(20,anyVal('anyRollWidth',115)),gap:Math.max(0,anyVal('anyLabelGap',3))};}
-function anyBarcodeDimChanged(){previewLabelsLive();}
+function anyBarcodeDimChanged(){barcodeDesign=anyBarcodeAutoDesign(readAnyBarcodeDims());renderBarcodeEditor();previewLabelsLive();}
 function isAnyBarcodeMode(){return currentLabelType()==='anybarcode';}
-function anyBarcodeAnchorStyle(k,d,barW,barTop,barH){
-  if(k==='shop')return 'left:1mm;right:1mm;top:.6mm;text-align:center;';
-  if(k==='barcode')return `left:${Math.max(1,(d.l-barW)/2).toFixed(1)}mm;top:${barTop.toFixed(1)}mm;width:${barW.toFixed(1)}mm;`;
-  if(k==='code')return `left:1mm;right:1mm;top:${Math.min(d.h-4,barTop+barH+.6).toFixed(1)}mm;text-align:center;`;
-  if(k==='pcs')return 'left:1mm;bottom:.8mm;';
-  if(k==='variant')return 'left:25%;right:25%;bottom:.8mm;text-align:center;';
-  if(k==='price')return 'right:1mm;bottom:.8mm;';
-  return '';
+function anyBarcodeManualTransform(k){const o=barcodeDesign[k]||{x:0,y:0};return `transform:translate(${Number(o.x||0).toFixed(1)}mm,${Number(o.y||0).toFixed(1)}mm);`;}
+function anyBarcodeLayout(d){
+  const scale=anyClamp(Math.min(d.l/50,d.h/30),.45,1.70),auto=anyBarcodeAutoDesign(d);
+  /* Barcode A-/A+ controls both real line width and height. */
+  const req=Math.max(2,Number(barcodeDesign.barcode?.sizeMM||auto.barcode.sizeMM));
+  const ratio=anyClamp(req/auto.barcode.sizeMM,.42,1.62);
+  const barW=anyClamp(d.l*.735*ratio,8,d.l-3.2);
+  const barH=anyClamp(d.h*.285*ratio,2.4,d.h*.38);
+  /* Approved sample proportions: large shop, broad barcode, code tucked under it,
+     PCS/variant middle row and bold price near bottom — all inside the entered L/H. */
+  const shopTop=anyClamp(d.h*.045,.35,2.0);
+  const barTop=anyClamp(d.h*.185,1.7,d.h*.27);
+  const codeTop=anyClamp(barTop+barH+(0.30*scale),barTop+barH+.15,d.h*.515);
+  const rowTop=anyClamp(d.h*.585,codeTop+(2.7*scale),d.h*.705);
+  const priceTop=anyClamp(d.h*.765,rowTop+(3.0*scale),d.h-(4.7*scale));
+  return {scale,barW,barH,shopTop,barTop,codeTop,rowTop,priceTop};
 }
 function anyBarcodeOneLabel(p){
-  const d=readAnyBarcodeDims();const shop=(document.getElementById('barcodeShopName')?.value||DB.shop.name||'YOUR SHOP').toUpperCase();const code=p.code||p.sku||'';const pcs=(document.getElementById('barcodePcsText')?.value||'').trim();const variant=p.variant||'';
-  const barW=Math.max(8,Math.min(d.l-4,Math.max(12,d.l*.58)));const requestedH=Number(barcodeDesign.barcode?.sizeMM||6);const barH=Math.max(2.4,Math.min(requestedH,Math.max(2.4,d.h*.34)));const barTop=Math.max(2.4,Math.min(d.h-6,2.8));
-  const sty=k=>anyBarcodeAnchorStyle(k,d,barW,barTop,barH)+barcodeStyle(k);
-  return `<div class="any-label" style="width:${d.l}mm;height:${d.h}mm"><div class="kp-el kp-shop" data-k="shop" style="${sty('shop')}">${barcodeAttr(shop)}</div><div class="kp-el any-barcode-box" data-k="barcode" style="${sty('barcode')}height:${barH}mm"><svg class="kp-bars" data-barcode="${barcodeAttr(code)}"></svg></div><div class="kp-el kp-code" data-k="code" style="${sty('code')}">${barcodeAttr(code)}</div><div class="kp-el kp-pcs" data-k="pcs" style="${sty('pcs')}">${barcodeAttr(pcs)}</div><div class="kp-el kp-variant" data-k="variant" style="${sty('variant')}">${barcodeAttr(variant)}</div><div class="kp-el kp-price" data-k="price" style="${sty('price')}">₹${fmtN(p.sell)}</div></div>`;
+  const d=readAnyBarcodeDims(),a=anyBarcodeLayout(d),auto=anyBarcodeAutoDesign(d);
+  const shop=(document.getElementById('barcodeShopName')?.value||DB.shop.name||'YOUR SHOP').toUpperCase();
+  const code=p.code||p.sku||'',pcs=(document.getElementById('barcodePcsText')?.value||'').trim(),variant=p.variant||'';
+  const fs=k=>Number(barcodeDesign[k]?.sizeMM||auto[k].sizeMM).toFixed(1),tr=k=>anyBarcodeManualTransform(k);
+  return `<div class="any-label" style="width:${d.l}mm;height:${d.h}mm"><div class="kp-el kp-shop" data-k="shop" style="left:1mm;right:1mm;top:${a.shopTop.toFixed(1)}mm;text-align:center;font-size:${fs('shop')}mm;${tr('shop')}">${barcodeAttr(shop)}</div><div class="kp-el any-barcode-box" data-k="barcode" style="left:${((d.l-a.barW)/2).toFixed(1)}mm;top:${a.barTop.toFixed(1)}mm;width:${a.barW.toFixed(1)}mm;height:${a.barH.toFixed(1)}mm;${tr('barcode')}"><svg class="kp-bars" data-barcode="${barcodeAttr(code)}"></svg></div><div class="kp-el kp-code" data-k="code" style="left:1mm;right:1mm;top:${a.codeTop.toFixed(1)}mm;text-align:center;font-size:${fs('code')}mm;${tr('code')}">${barcodeAttr(code)}</div><div class="kp-el kp-pcs" data-k="pcs" style="left:${Math.max(1,d.l*.07).toFixed(1)}mm;top:${a.rowTop.toFixed(1)}mm;font-size:${fs('pcs')}mm;font-weight:800;${tr('pcs')}">${barcodeAttr(pcs)}</div><div class="kp-el kp-variant" data-k="variant" style="left:24%;right:24%;top:${a.rowTop.toFixed(1)}mm;text-align:center;font-size:${fs('variant')}mm;${tr('variant')}">${barcodeAttr(variant)}</div><div class="kp-el kp-price" data-k="price" style="left:18%;right:18%;top:${a.priceTop.toFixed(1)}mm;text-align:center;font-size:${fs('price')}mm;font-weight:900;${tr('price')}">₹${fmtN(p.sell)}</div></div>`;
 }
-function renderAnyBarcodePreview(products){const area=document.getElementById('labelPreviewArea'),sc=document.getElementById('barcodePreviewScroller');if(!area)return;const up=jewelLabelsPerRow(),d=readAnyBarcodeDims();area.classList.remove('barcode-sheet-pro','bulk-preview-mode','jewel-preview-wrap','normal-mm-sheet');area.classList.add('any-barcode-wrap');area.style.setProperty('--any-up',up);area.style.setProperty('--any-gap',d.gap+'mm');area.style.gridTemplateColumns=`repeat(${up},${d.l}mm)`;area.style.columnGap=d.gap+'mm';area.style.minWidth=Math.max(d.w,(d.l*up)+(d.gap*Math.max(0,up-1)))+'mm';if(sc)sc.classList.add('bulk-scroll');area.innerHTML=products.map(p=>anyBarcodeOneLabel(p)).join('');renderRealCode128(area);bindPreviewElements();const used=(d.l*up)+(d.gap*Math.max(0,up-1)),st=document.getElementById('barcodePreviewStatus');if(st)st.textContent=`Any Barcode Label • ${up}-UP • L ${d.l} × H ${d.h} mm • Roll W ${d.w} mm • Used ${used.toFixed(1)} mm`;const pt=document.getElementById('barcodePreviewTitle');if(pt)pt.textContent=`4. Live ${up}-UP Preview`;}
-function anyBarcodePrintDocument(labels){const d=readAnyBarcodeDims(),up=jewelLabelsPerRow();const holder=document.createElement('div');holder.innerHTML=labels;renderRealCode128(holder);const html=holder.innerHTML,w=window.open('','_blank');if(!w){toast('Allow popups to print labels');return;}const css=`@page{size:${d.w}mm auto;margin:0}html,body{margin:0;padding:0;background:#fff}.sheet{width:${d.w}mm;display:grid;grid-template-columns:repeat(${up},${d.l}mm);column-gap:${d.gap}mm;row-gap:0;align-items:start}.any-label{position:relative;width:${d.l}mm;height:${d.h}mm;box-sizing:border-box;background:#fff;color:#000;overflow:hidden;font-family:Arial,sans-serif;break-inside:avoid;page-break-inside:avoid}.kp-el{position:absolute!important;margin:0!important;color:#000!important;box-sizing:border-box}.any-barcode-box{overflow:visible!important}.any-barcode-box .kp-bars{position:static!important;width:100%!important;height:100%!important;margin:0!important;transform:none!important;display:block!important}.kp-shop,.kp-code,.kp-variant,.kp-price{white-space:nowrap;overflow:hidden}.kp-bars{background:none!important;display:block!important}.kp-bars rect{shape-rendering:crispEdges}`;w.document.open();w.document.write('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+css+'</style></head><body><div class="sheet">'+html+'</div></body></html>');w.document.close();setTimeout(()=>{w.focus();w.print();},180);}
+function renderAnyBarcodePreview(products){const area=document.getElementById('labelPreviewArea'),sc=document.getElementById('barcodePreviewScroller');if(!area)return;const up=jewelLabelsPerRow(),d=readAnyBarcodeDims();area.classList.remove('barcode-sheet-pro','bulk-preview-mode','jewel-preview-wrap','normal-mm-sheet');area.classList.add('any-barcode-wrap');area.style.setProperty('--any-up',up);area.style.setProperty('--any-gap',d.gap+'mm');area.style.gridTemplateColumns=`repeat(${up},${d.l}mm)`;area.style.columnGap=d.gap+'mm';area.style.minWidth=Math.max(d.w,(d.l*up)+(d.gap*Math.max(0,up-1)))+'mm';if(sc)sc.classList.add('bulk-scroll');area.innerHTML=products.map(p=>anyBarcodeOneLabel(p)).join('');renderRealCode128(area);bindPreviewElements();const used=(d.l*up)+(d.gap*Math.max(0,up-1)),st=document.getElementById('barcodePreviewStatus');if(st)st.textContent=`Any Barcode Label • ${up}-UP • L ${d.l} × H ${d.h} mm • Roll W ${d.w} mm • Used ${used.toFixed(1)} mm • Auto Fit ON`;const pt=document.getElementById('barcodePreviewTitle');if(pt)pt.textContent=`4. Live ${up}-UP Preview`;}
+function anyBarcodePrintDocument(labels){const d=readAnyBarcodeDims(),up=jewelLabelsPerRow();const holder=document.createElement('div');holder.innerHTML=labels;renderRealCode128(holder);const html=holder.innerHTML,w=window.open('','_blank');if(!w){toast('Allow popups to print labels');return;}const css=`@page{size:${d.w}mm auto;margin:0}html,body{margin:0;padding:0;background:#fff}.sheet{width:${d.w}mm;display:grid;grid-template-columns:repeat(${up},${d.l}mm);column-gap:${d.gap}mm;row-gap:0;align-items:start}.any-label{position:relative;width:${d.l}mm;height:${d.h}mm;box-sizing:border-box;background:#fff;color:#000;overflow:hidden;font-family:Arial,sans-serif;break-inside:avoid;page-break-inside:avoid}.kp-el{position:absolute!important;margin:0!important;color:#000!important;box-sizing:border-box;transform-origin:center center}.any-barcode-box{overflow:visible!important}.any-barcode-box .kp-bars{position:static!important;width:100%!important;height:100%!important;margin:0!important;transform:none!important;display:block!important}.kp-shop,.kp-code,.kp-variant,.kp-price{white-space:nowrap;overflow:hidden}.kp-bars{background:none!important;display:block!important}.kp-bars rect{shape-rendering:crispEdges}`;w.document.open();w.document.write('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+css+'</style></head><body><div class="sheet">'+html+'</div></body></html>');w.document.close();setTimeout(()=>{w.focus();w.print();},180);}
 
 /* ============ JEWELLERY TAGS — SAFE EXTENSION ============ */
 const JEWEL_PRESETS={
@@ -2803,7 +2870,7 @@ function changeBarcodeLabelType(){
   if(any)any.style.display=isAny?'block':'none';
   if(isJewel){
     writeJewelDims(JEWEL_PRESETS[type]||JEWEL_PRESETS.custom);refreshSavedJewellery();barcodeDesign=loadJewelDesign(type);
-  }else if(isAny){barcodeDesign=loadAnyBarcodeDesign();}
+  }else if(isAny){barcodeDesign=anyBarcodeAutoDesign(readAnyBarcodeDims());}
   else{barcodeDesign=loadBarcodeDesign();}
   activeBarcodeLayoutType=type;
   renderBarcodeEditor();previewLabelsLive();
@@ -3528,8 +3595,8 @@ function toggleCodeVisibility(){
 
 
 async function kpGetApproxLocation(){
-  // Prefer our Vercel endpoint. If the /api file was not deployed or a host
-  // does not expose Vercel geo headers, fall back to a browser-safe IP lookup.
+  // Existing IP-based location fallback. Kept unchanged in purpose so GPS denial,
+  // timeout, unsupported browsers or reverse-geocode failure never block the app.
   try{
     const r=await fetch('/api/location?ts='+Date.now(),{cache:'no-store'});
     if(r.ok){
@@ -3547,19 +3614,80 @@ async function kpGetApproxLocation(){
   return null;
 }
 
+function kpGetGpsPosition(){
+  return new Promise(resolve=>{
+    if(!('geolocation' in navigator)){resolve(null);return}
+    let settled=false;
+    const done=v=>{if(settled)return;settled=true;resolve(v)};
+    try{
+      navigator.geolocation.getCurrentPosition(
+        pos=>done(pos),
+        ()=>done(null),
+        {enableHighAccuracy:true,timeout:8000,maximumAge:300000}
+      );
+      // Extra safety: a broken WebView geolocation implementation must never hold login/activation.
+      setTimeout(()=>done(null),9000);
+    }catch(e){done(null)}
+  });
+}
+
+async function kpReverseGpsLocation(lat,lng){
+  let ctrl=null,timer=null;
+  try{
+    if(typeof AbortController!=='undefined'){
+      ctrl=new AbortController(); timer=setTimeout(()=>ctrl.abort(),5500);
+    }
+    const url='https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+encodeURIComponent(lat)+'&longitude='+encodeURIComponent(lng)+'&localityLanguage=en';
+    const r=await fetch(url,{cache:'no-store',signal:ctrl?ctrl.signal:undefined,headers:{'Accept':'application/json'}});
+    if(!r.ok)return null;
+    const j=await r.json();
+    const city=j.city||j.locality||j.localityInfo?.administrative?.[3]?.name||j.localityInfo?.administrative?.[2]?.name||'';
+    const state=j.principalSubdivision||j.localityInfo?.administrative?.[1]?.name||'';
+    const country=j.countryName||j.countryCode||'';
+    if(!city&&!state&&!country)return null;
+    return {city,state,country};
+  }catch(e){return null}
+  finally{if(timer)clearTimeout(timer)}
+}
+
+async function kpGetBestDeviceLocation(){
+  // GPS first on deployed HTTPS. If permission is denied/unavailable, silently use existing IP location.
+  const pos=await kpGetGpsPosition();
+  if(pos&&pos.coords){
+    const lat=Number(pos.coords.latitude),lng=Number(pos.coords.longitude),accuracy=Number(pos.coords.accuracy||0);
+    if(Number.isFinite(lat)&&Number.isFinite(lng)){
+      const gpsLoc=await kpReverseGpsLocation(lat,lng);
+      if(gpsLoc){
+        // Keep IP too when available; GPS remains the source for city/state/country.
+        const ipLoc=await kpGetApproxLocation();
+        const result={city:gpsLoc.city||'',state:gpsLoc.state||'',country:gpsLoc.country||'',ip:(ipLoc&&ipLoc.ip)||'',latitude:lat,longitude:lng,accuracy,source:'gps'};
+        try{localStorage.setItem('kp_last_device_location_v1',JSON.stringify({...result,capturedAt:new Date().toISOString()}))}catch(e){}
+        return result;
+      }
+    }
+  }
+  const ipLoc=await kpGetApproxLocation();
+  if(ipLoc){
+    const result={city:ipLoc.city||'',state:ipLoc.state||'',country:ipLoc.country||'',ip:ipLoc.ip||'',source:'ip'};
+    try{localStorage.setItem('kp_last_device_location_v1',JSON.stringify({...result,capturedAt:new Date().toISOString()}))}catch(e){}
+    return result;
+  }
+  return null;
+}
+
 async function kpRecordLoginLocation(){
   try{
     const s=loadState(), code=s.activationCode||'', deviceId=s.deviceId||ensureDeviceId();
     if(!code||!deviceId)return false;
-    const loc=await kpGetApproxLocation();
+    const loc=await kpGetBestDeviceLocation();
     if(!loc)return false;
+    // Existing backend RPC contract is preserved: GPS is reverse-geocoded to city/state/country.
     const {data,error}=await kpSb.rpc('kpro_record_device_location',{
       p_code:code,p_device_id:deviceId,p_city:loc.city||'',p_state:loc.state||'',p_country:loc.country||'',p_ip:loc.ip||''
     });
     return !error && !!(data&&data.ok);
   }catch(e){return false}
 }
-
 
 function kpApplyActivationMeta(s,data){
   if(!data)return;
@@ -3599,14 +3727,14 @@ function kpRenderTrialTimer(){
 }
 setInterval(kpRenderTrialTimer,1000);
 
-async function activateDevice(){const input=document.getElementById('activationCode');const code=input.value.trim();const field=document.getElementById('codeField');if(!code){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast('Please enter your Activation Code');return}const s=loadState();const deviceId=ensureDeviceId();toast('Checking activation code...');const {data,error}=await kpSb.rpc('verify_activation',{p_code:code,p_device_id:deviceId});if(error||!data||!data.ok){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast((data&&data.error)||'Activation failed');return}s.activated=true;s.activationCode=code;s.deviceId=deviceId;kpApplyActivationMeta(s,data);saveState(s);try{localStorage.setItem('kp_pro_device_activated_v1','1')}catch(e){};await kpRecordLoginLocation();refreshActivationUI();kpRenderTrialTimer();toast('Device activated successfully');setTimeout(()=>showScreen('shop'),450)}
+async function activateDevice(){const input=document.getElementById('activationCode');const code=input.value.trim();const field=document.getElementById('codeField');if(!code){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast('Please enter your Activation Code');return}const s=loadState();const deviceId=ensureDeviceId();toast('Checking activation code...');const {data,error}=await kpSb.rpc('verify_activation',{p_code:code,p_device_id:deviceId});if(error||!data||!data.ok){if(field){field.classList.add('shake');setTimeout(()=>field.classList.remove('shake'),400)}toast((data&&data.error)||'Activation failed');return}s.activated=true;s.activationCode=code;s.deviceId=deviceId;kpApplyActivationMeta(s,data);saveState(s);try{localStorage.setItem('kp_pro_device_activated_v1','1')}catch(e){};await kpRecordLoginLocation();refreshActivationUI();kpRenderTrialTimer();toast('Device activated successfully');setTimeout(()=>kpRouteBoundDevice(),450)}
 
 function logoutDevice(){
   // Device activation is permanent until the backend explicitly disables,
   // expires or removes this device. Normal logout must never revoke it.
   const s=loadState();
   if(s.activated){
-    showScreen('shop');
+    kpRouteBoundDevice();
     toast('This device remains activated');
     return;
   }
@@ -3615,12 +3743,14 @@ function logoutDevice(){
 }
 
 function showScreen(name){
+  const gate=document.getElementById('kpBootGate'); if(gate) gate.classList.add('kp-hidden');
   document.getElementById('screenActivate').classList.toggle('active', name==='activate');
   document.getElementById('screenShop').classList.toggle('active', name==='shop');
   document.getElementById('screenCreateShop').classList.toggle('active', name==='createshop');
   document.getElementById('screenLogin').classList.toggle('active', name==='login');
   document.getElementById('screenDashboard').classList.toggle('active', name==='dashboard');
   document.getElementById('screenJoinShop').classList.toggle('active', name==='joinshop');
+  document.getElementById('screenStaffLogin').classList.toggle('active', name==='stafflogin');
   document.getElementById('screenBillingApp').classList.toggle('active', name==='billingapp');
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -3662,12 +3792,66 @@ async function doMainAction(){
   showScreen('login');
 }
 
+/* ===== DEVICE ROLE BINDING — keeps Create/Join selector one-time only ===== */
+const KP_DEVICE_BINDING_KEY='kp_device_shop_binding_v1';
+function kpGetDeviceBinding(){try{return JSON.parse(localStorage.getItem(KP_DEVICE_BINDING_KEY)||'null')}catch(e){return null}}
+function kpSetDeviceBinding(v){try{localStorage.setItem(KP_DEVICE_BINDING_KEY,JSON.stringify(v))}catch(e){}}
+function kpOwnerBoundEmail(){
+  const b=kpGetDeviceBinding(); if(b&&b.role==='owner'&&b.email)return String(b.email).toLowerCase();
+  try{const p=JSON.parse(localStorage.getItem('kp_pro_shop_profile')||'{}')||{};return String(p.email||'').toLowerCase()}catch(e){return ''}
+}
+function kpApplyBoundLoginUI(){const b=kpGetDeviceBinding();document.body.classList.toggle('kp-owner-bound',!!(b&&b.role==='owner'))}
+async function kpRouteBoundDevice(){
+  const s=loadState();
+  if(!s.activated||!s.activationCode){showScreen('activate');return}
+  let b=kpGetDeviceBinding();
+  let session=null;try{session=(await kpSb.auth.getSession()).data.session}catch(e){}
+  if(!b&&session&&session.user){
+    const md=session.user.user_metadata||{};
+    if(md.kp_staff){b={role:'staff',staffName:md.full_name||'',mobile:String(md.kp_mobile||''),boundAt:new Date().toISOString()};kpSetDeviceBinding(b)}
+    else{let p={};try{p=JSON.parse(localStorage.getItem('kp_pro_shop_profile')||'{}')||{}}catch(e){};b={role:'owner',email:String(session.user.email||p.email||'').toLowerCase(),boundAt:new Date().toISOString()};kpSetDeviceBinding(b)}
+  }
+  if(!b){
+    let p={};try{p=JSON.parse(localStorage.getItem('kp_pro_shop_profile')||'{}')||{}}catch(e){}
+    if(localStorage.getItem('kp_pro_shop_created')==='true'&&p.email){b={role:'owner',email:String(p.email).toLowerCase(),boundAt:new Date().toISOString()};kpSetDeviceBinding(b)}
+    else if(localStorage.getItem('kp_staff_auth_v1')){b={role:'staff',staffName:'',mobile:'',boundAt:new Date().toISOString()};kpSetDeviceBinding(b)}
+  }
+  kpApplyBoundLoginUI();
+  if(!b){showScreen('shop');return}
+  if(session){
+    try{const my=await kpAfterAuthenticated();if(my){kpSetAccessFromShop(my);openFullBillingApp();return}}catch(e){}
+  }
+  if(b.role==='staff')showScreen('stafflogin'); else showScreen('login');
+}
+
+async function kpStaffLogin(){
+  const msg=document.getElementById('kpStaffLoginMessage');msg.className='lpMsg';msg.textContent='';
+  const name=document.getElementById('kpStaffLoginName').value.trim();
+  const mobile=document.getElementById('kpStaffLoginMobile').value.replace(/\D/g,'').slice(0,10);
+  document.getElementById('kpStaffLoginMobile').value=mobile;
+  if(!name){msg.className='lpMsg err';msg.textContent='Please enter Staff Name.';return}
+  if(!/^\d{10}$/.test(mobile)){msg.className='lpMsg err';msg.textContent='Please enter a valid 10 digit Mobile Number.';return}
+  let auth={};try{auth=JSON.parse(localStorage.getItem('kp_staff_auth_v1')||'{}')||{}}catch(e){}
+  if(!auth.email||!auth.password){msg.className='lpMsg err';msg.textContent='Staff access is not saved on this device. Please contact the shop owner.';return}
+  msg.className='lpMsg ok';msg.textContent='Signing in...';
+  try{await kpSb.auth.signOut()}catch(e){}
+  const {data,error}=await kpSb.auth.signInWithPassword({email:auth.email,password:auth.password});
+  if(error||!data||!data.user){msg.className='lpMsg err';msg.textContent=(error&&error.message)||'Staff login failed.';return}
+  const md=data.user.user_metadata||{};
+  const realName=String(md.full_name||'').trim(),realMobile=String(md.kp_mobile||'').replace(/\D/g,'');
+  if(realName.toLowerCase()!==name.toLowerCase()||realMobile!==mobile){try{await kpSb.auth.signOut()}catch(e){};msg.className='lpMsg err';msg.textContent='Staff Name or Mobile Number is incorrect.';return}
+  try{const my=await kpAfterAuthenticated();if(!my)throw new Error('Staff access is not linked to a shop.');kpSetAccessFromShop(my);kpSetDeviceBinding({role:'staff',staffName:realName,mobile:realMobile,boundAt:new Date().toISOString()});await kpRecordLoginLocation();msg.className='lpMsg ok';msg.textContent='Login Successful';setTimeout(openFullBillingApp,250)}catch(e){msg.className='lpMsg err';msg.textContent=e.message||'Staff login failed.'}
+}
+document.getElementById('kpStaffLoginMobile').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,10)});
+document.getElementById('kpStaffLoginMobile').addEventListener('keydown',e=>{if(e.key==='Enter')kpStaffLogin()});
+
 document.getElementById('activationCode').addEventListener('keydown',e=>{if(e.key==='Enter') activateDevice();});
 refreshActivationUI();
 selectTab('login');
 // On every normal open/reopen, an already activated device skips Activation.
 // Backend verification continues silently; only an explicit rejection can revoke it.
-if(loadState().activated && loadState().activationCode){showScreen('shop')}
+if(loadState().activated && loadState().activationCode){setTimeout(kpRouteBoundDevice,0)}
+else{showScreen('activate')}
 setTimeout(()=>{if(loadState().activated)kpValidateStoredActivation(false)},1200);
 setInterval(()=>{if(loadState().activated)kpValidateStoredActivation(true)},300000);
 
@@ -3698,7 +3882,7 @@ function kpSyncShopProfileToBilling(){
   localStorage.setItem('kanakkuProDB_v1',JSON.stringify(db));
 }
 
-async function kpBillingLogout(){try{await kpCloudSave();await kpSb.auth.signOut()}catch(e){}localStorage.removeItem('kp_pro_owner_logged_in');localStorage.removeItem('kp_pro_access_context');kpSetCloudShopId('');if(kpCloudTimer){clearInterval(kpCloudTimer);kpCloudTimer=null}showScreen('shop');try{document.getElementById('lpPassword').value='';document.getElementById('lpMessage').className='lpMsg';document.getElementById('lpMessage').textContent=''}catch(e){}toast('Logged out successfully')}
+function kpBillingLogout(){kpAskLogout()}
 
 async function kpBillingBack(){
   // Back must stay inside the billing software. Never return to Activation/Login.
@@ -3848,7 +4032,7 @@ function csBackToStep1(){
   $('csStep1Badge').classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
 }
-async function csCreateShop(){const msg=$('csMessage');msg.className='csMessage';msg.textContent='';const email=$('csEmail').value.trim().toLowerCase(),p=$('csPassword').value,cp=$('csConfirmPassword').value;if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){msg.className='csMessage err';msg.textContent='Please enter a valid Email ID.';$('csEmail').focus();return}if(p.length<6){msg.className='csMessage err';msg.textContent='Password must be at least 6 characters.';$('csPassword').focus();return}if(p!==cp){msg.className='csMessage err';msg.textContent='Passwords do not match.';$('csConfirmPassword').focus();return}const shopProfile={shopName:$('csShopName').value.trim(),ownerName:$('csOwnerName').value.trim(),fullAddress:$('csAddress').value.trim(),city:$('csCity').value.trim(),state:$('csState').value,pincode:$('csPincode').value,contactNumber:$('csContact').value,gstin:$('csGstin').value.trim(),email,createdAt:new Date().toISOString()};localStorage.setItem('kp_pending_create_shop',JSON.stringify(shopProfile));msg.className='csMessage ok';msg.textContent='Creating account...';const redirectTo=location.origin+location.pathname;const {data,error}=await kpSb.auth.signUp({email,password:p,options:{emailRedirectTo:redirectTo,data:{full_name:shopProfile.ownerName}}});if(error){msg.className='csMessage err';msg.textContent=error.message;return}if(data.session){try{await kpAfterAuthenticated();await kpRecordLoginLocation();localStorage.setItem('kp_pro_owner_logged_in','true');msg.textContent='Shop Created Successfully';setTimeout(openFullBillingApp,350)}catch(e){msg.className='csMessage err';msg.textContent=e.message||'Could not create shop'}}else{msg.className='csMessage err';msg.textContent='Account created, but Email Confirmation is still enabled in Supabase. Turn Confirm email OFF once, then create the shop again.'}}
+async function csCreateShop(){const msg=$('csMessage');msg.className='csMessage';msg.textContent='';const email=$('csEmail').value.trim().toLowerCase(),p=$('csPassword').value,cp=$('csConfirmPassword').value;if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){msg.className='csMessage err';msg.textContent='Please enter a valid Email ID.';$('csEmail').focus();return}if(p.length<6){msg.className='csMessage err';msg.textContent='Password must be at least 6 characters.';$('csPassword').focus();return}if(p!==cp){msg.className='csMessage err';msg.textContent='Passwords do not match.';$('csConfirmPassword').focus();return}const shopProfile={shopName:$('csShopName').value.trim(),ownerName:$('csOwnerName').value.trim(),fullAddress:$('csAddress').value.trim(),city:$('csCity').value.trim(),state:$('csState').value,pincode:$('csPincode').value,contactNumber:$('csContact').value,gstin:$('csGstin').value.trim(),email,createdAt:new Date().toISOString()};localStorage.setItem('kp_pending_create_shop',JSON.stringify(shopProfile));msg.className='csMessage ok';msg.textContent='Creating account...';const redirectTo=location.origin+location.pathname;const {data,error}=await kpSb.auth.signUp({email,password:p,options:{emailRedirectTo:redirectTo,data:{full_name:shopProfile.ownerName}}});if(error){msg.className='csMessage err';msg.textContent=error.message;return}if(data.session){try{await kpAfterAuthenticated();await kpRecordLoginLocation();localStorage.setItem('kp_pro_owner_logged_in','true');kpSetDeviceBinding({role:'owner',email:email,boundAt:new Date().toISOString()});kpApplyBoundLoginUI();msg.textContent='Shop Created Successfully';setTimeout(openFullBillingApp,350)}catch(e){msg.className='csMessage err';msg.textContent=e.message||'Could not create shop'}}else{msg.className='csMessage err';msg.textContent='Account created, but Email Confirmation is still enabled in Supabase. Turn Confirm email OFF once, then create the shop again.'}}
 
 /* ===== OWNER LOGIN LOGIC (front-end test flow) ===== */
 function lpTogglePwd(){
@@ -3856,15 +4040,29 @@ function lpTogglePwd(){
   const showing=input.type==='text'; input.type=showing?'password':'text';
   btn.setAttribute('aria-label',showing?'Show password':'Hide password');
 }
-async function lpLogin(){const msg=$('lpMessage');msg.className='lpMsg';msg.textContent='';const email=$('lpEmail').value.trim().toLowerCase(),password=$('lpPassword').value;if(!email){msg.className='lpMsg err';msg.textContent='Please enter Email ID.';$('lpEmail').focus();return}if(!password){msg.className='lpMsg err';msg.textContent='Please enter Password.';$('lpPassword').focus();return}msg.className='lpMsg ok';msg.textContent='Signing in...';const {error}=await kpSb.auth.signInWithPassword({email,password});if(error){msg.className='lpMsg err';msg.textContent=error.message;return}try{const my=await kpAfterAuthenticated();if(!my)throw new Error('No shop is linked to this account.');kpSetAccessFromShop(my);await kpRecordLoginLocation();msg.className='lpMsg ok';msg.textContent='Login Successful';setTimeout(openFullBillingApp,300)}catch(e){msg.className='lpMsg err';msg.textContent=e.message||'Login failed'}}
+async function lpLogin(){const msg=$('lpMessage');msg.className='lpMsg';msg.textContent='';const email=$('lpEmail').value.trim().toLowerCase(),password=$('lpPassword').value;const boundEmail=kpOwnerBoundEmail();if(boundEmail&&email&&email!==boundEmail){msg.className='lpMsg err';msg.textContent='Please enter the original Shop Email ID for this device.';$('lpEmail').focus();return}if(!email){msg.className='lpMsg err';msg.textContent='Please enter Email ID.';$('lpEmail').focus();return}if(!password){msg.className='lpMsg err';msg.textContent='Please enter Password.';$('lpPassword').focus();return}msg.className='lpMsg ok';msg.textContent='Signing in...';const {error}=await kpSb.auth.signInWithPassword({email,password});if(error){msg.className='lpMsg err';msg.textContent=error.message;return}try{const my=await kpAfterAuthenticated();if(!my)throw new Error('No shop is linked to this account.');kpSetAccessFromShop(my);await kpRecordLoginLocation();msg.className='lpMsg ok';msg.textContent='Login Successful';setTimeout(openFullBillingApp,300)}catch(e){msg.className='lpMsg err';msg.textContent=e.message||'Login failed'}}
 async function lpForgotPassword(){const msg=$('lpMessage'),email=$('lpEmail').value.trim().toLowerCase();msg.className='lpMsg';msg.textContent='';if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){msg.className='lpMsg err';msg.textContent='Enter your Email ID first.';$('lpEmail').focus();return}msg.className='lpMsg ok';msg.textContent='Sending reset email...';const {error}=await kpSb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname+'?recovery=1'});if(error){msg.className='lpMsg err';msg.textContent=error.message;return}msg.className='lpMsg ok';msg.textContent='Password reset email sent. Check your inbox.'}
 function lpLoadDashboard(){
   let p={}; try{p=JSON.parse(localStorage.getItem('kp_pro_shop_profile')||'{}')}catch(e){}
   $('dbShopName').textContent=p.shopName||'Your Shop';
   $('dbOwnerLine').textContent=p.ownerName?('Welcome, '+p.ownerName):'Welcome';
 }
-async function lpLogout(){try{await kpCloudSave();await kpSb.auth.signOut()}catch(e){}localStorage.removeItem('kp_pro_owner_logged_in');kpSetCloudShopId('');$('lpPassword').value='';showScreen('shop');toast('Logged out successfully')}
+function lpLogout(){kpAskLogout()}
 $('lpPassword').addEventListener('keydown',e=>{if(e.key==='Enter')lpLogin();});
+
+function kpAskLogout(){const el=document.getElementById('kpLogoutConfirm');if(el)el.classList.add('active')}
+function kpCancelLogout(){const el=document.getElementById('kpLogoutConfirm');if(el)el.classList.remove('active')}
+async function kpConfirmLogout(){
+  kpCancelLogout();
+  try{await kpCloudSave();await kpSb.auth.signOut()}catch(e){}
+  localStorage.removeItem('kp_pro_owner_logged_in');
+  localStorage.removeItem('kp_pro_access_context');
+  kpSetCloudShopId('');
+  if(typeof kpCloudTimer!=='undefined'&&kpCloudTimer){clearInterval(kpCloudTimer);kpCloudTimer=null}
+  try{document.getElementById('lpPassword').value='';document.getElementById('lpMessage').className='lpMsg';document.getElementById('lpMessage').textContent='';document.getElementById('kpStaffLoginName').value='';document.getElementById('kpStaffLoginMobile').value='';document.getElementById('kpStaffLoginMessage').className='lpMsg';document.getElementById('kpStaffLoginMessage').textContent=''}catch(e){}
+  toast('Logged out successfully');
+  setTimeout(kpRouteBoundDevice,80);
+}
 
 /* ===== JOIN SHOP LOGIC ===== */
 $('jsInviteCode').addEventListener('input',e=>{
@@ -3874,8 +4072,8 @@ $('jsStaffMobile').addEventListener('input',e=>{
   e.target.value=e.target.value.replace(/\D/g,'').slice(0,10);
 });
 
-async function jsJoinShop(){const msg=$('jsMessage');msg.className='jsMessage';msg.textContent='';const inviteCode=$('jsInviteCode').value.trim().toUpperCase(),staffName=$('jsStaffName').value.trim(),mobile=$('jsStaffMobile').value.trim();if(!inviteCode){msg.className='jsMessage err';msg.textContent='Please enter the Shop Invite Code.';$('jsInviteCode').focus();return}if(!staffName){msg.className='jsMessage err';msg.textContent='Please enter Staff Name.';$('jsStaffName').focus();return}if(!/^\d{10}$/.test(mobile)){msg.className='jsMessage err';msg.textContent='Please enter a valid 10 digit Mobile Number.';$('jsStaffMobile').focus();return}msg.className='jsMessage ok';msg.textContent='Joining shop...';localStorage.setItem('kp_pending_join',JSON.stringify({inviteCode,staffName,mobile}));try{await kpSb.auth.signOut()}catch(e){}const rand=((window.crypto&&crypto.randomUUID)?crypto.randomUUID().replace(/-/g,''):(Math.random().toString(36).slice(2)+Date.now().toString(36))).slice(0,20);const hiddenEmail='kpstaff.'+Date.now()+'.'+rand+'@example.com';const hiddenPassword='Kp!'+rand+Math.random().toString(36).slice(2,10)+'9a';const {data,error}=await kpSb.auth.signUp({email:hiddenEmail,password:hiddenPassword,options:{data:{full_name:staffName,kp_staff:true,kp_mobile:mobile}}});if(error){localStorage.removeItem('kp_pending_join');msg.className='jsMessage err';msg.textContent=error.message||'Could not join shop.';return}if(!data||!data.session){localStorage.removeItem('kp_pending_join');msg.className='jsMessage err';msg.textContent='Direct Join needs Email Confirmation OFF in Supabase.';return}try{const my=await kpCompletePendingJoin();kpSetAccessFromShop(my);localStorage.setItem('kp_staff_auth_v1',JSON.stringify({email:hiddenEmail,password:hiddenPassword,createdAt:new Date().toISOString()}));msg.className='jsMessage ok';msg.textContent='Shop Joined Successfully';setTimeout(openFullBillingApp,300)}catch(e){try{await kpSb.auth.signOut()}catch(_){}localStorage.removeItem('kp_pending_join');msg.className='jsMessage err';msg.textContent=e.message||'Could not join shop.'}}
-kpSb.auth.onAuthStateChange((event,session)=>{if(event==='PASSWORD_RECOVERY'){setTimeout(kpShowResetPassword,100);return}if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session){setTimeout(async()=>{try{if(localStorage.getItem('kp_pending_join')){const my=await kpCompletePendingJoin();kpSetAccessFromShop(my);openFullBillingApp()}else if(localStorage.getItem('kp_pending_create_shop')){const my=await kpAfterAuthenticated();if(my)localStorage.setItem('kp_pro_owner_logged_in','true')}}catch(e){console.error(e)}},150)}});
+async function jsJoinShop(){const msg=$('jsMessage');msg.className='jsMessage';msg.textContent='';const inviteCode=$('jsInviteCode').value.trim().toUpperCase(),staffName=$('jsStaffName').value.trim(),mobile=$('jsStaffMobile').value.trim();if(!inviteCode){msg.className='jsMessage err';msg.textContent='Please enter the Shop Invite Code.';$('jsInviteCode').focus();return}if(!staffName){msg.className='jsMessage err';msg.textContent='Please enter Staff Name.';$('jsStaffName').focus();return}if(!/^\d{10}$/.test(mobile)){msg.className='jsMessage err';msg.textContent='Please enter a valid 10 digit Mobile Number.';$('jsStaffMobile').focus();return}msg.className='jsMessage ok';msg.textContent='Joining shop...';localStorage.setItem('kp_pending_join',JSON.stringify({inviteCode,staffName,mobile}));try{await kpSb.auth.signOut()}catch(e){}const rand=((window.crypto&&crypto.randomUUID)?crypto.randomUUID().replace(/-/g,''):(Math.random().toString(36).slice(2)+Date.now().toString(36))).slice(0,20);const hiddenEmail='kpstaff.'+Date.now()+'.'+rand+'@example.com';const hiddenPassword='Kp!'+rand+Math.random().toString(36).slice(2,10)+'9a';const {data,error}=await kpSb.auth.signUp({email:hiddenEmail,password:hiddenPassword,options:{data:{full_name:staffName,kp_staff:true,kp_mobile:mobile}}});if(error){localStorage.removeItem('kp_pending_join');msg.className='jsMessage err';msg.textContent=error.message||'Could not join shop.';return}if(!data||!data.session){localStorage.removeItem('kp_pending_join');msg.className='jsMessage err';msg.textContent='Direct Join needs Email Confirmation OFF in Supabase.';return}try{const my=await kpCompletePendingJoin();kpSetAccessFromShop(my);localStorage.setItem('kp_staff_auth_v1',JSON.stringify({email:hiddenEmail,password:hiddenPassword,createdAt:new Date().toISOString()}));kpSetDeviceBinding({role:'staff',staffName:staffName,mobile:mobile,boundAt:new Date().toISOString()});kpApplyBoundLoginUI();msg.className='jsMessage ok';msg.textContent='Shop Joined Successfully';setTimeout(openFullBillingApp,300)}catch(e){try{await kpSb.auth.signOut()}catch(_){}localStorage.removeItem('kp_pending_join');msg.className='jsMessage err';msg.textContent=e.message||'Could not join shop.'}}
+kpSb.auth.onAuthStateChange((event,session)=>{if(session&&session.user&&!kpGetDeviceBinding()){const md=session.user.user_metadata||{};if(md.kp_staff)kpSetDeviceBinding({role:'staff',staffName:md.full_name||'',mobile:String(md.kp_mobile||''),boundAt:new Date().toISOString()});else kpSetDeviceBinding({role:'owner',email:String(session.user.email||'').toLowerCase(),boundAt:new Date().toISOString()});kpApplyBoundLoginUI()}if(event==='PASSWORD_RECOVERY'){setTimeout(kpShowResetPassword,100);return}if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session){setTimeout(async()=>{try{if(localStorage.getItem('kp_pending_join')){const my=await kpCompletePendingJoin();kpSetAccessFromShop(my);openFullBillingApp()}else if(localStorage.getItem('kp_pending_create_shop')){const my=await kpAfterAuthenticated();if(my)localStorage.setItem('kp_pro_owner_logged_in','true')}}catch(e){console.error(e)}},150)}});
 
 </script>
 <script>
