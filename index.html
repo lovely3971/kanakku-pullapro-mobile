@@ -1475,6 +1475,8 @@ body[data-kp-light-theme="1"] tr:hover td{background:rgba(var(--accent-rgb),.06)
 <div class="field"><label class="field-label">Pincode</label><input id="setShopPincode" inputmode="numeric" maxlength="6" placeholder="Enter pincode"/></div>
 <div class="field"><label class="field-label">Contact Number</label><input id="setShopPhone" inputmode="numeric" maxlength="10" placeholder="Enter contact number"/></div>
 <div class="field"><label class="field-label">GSTIN</label><input id="setShopGST" placeholder="Enter GSTIN"/></div>
+<div class="field"><label class="field-label">Owner Email ID</label><input id="setOwnerEmail" type="email" readonly placeholder="Owner login email" style="opacity:.92;cursor:not-allowed"/><small style="display:block;margin-top:5px;color:var(--text-dim)">Automatically linked from the shop owner login.</small></div>
+<div class="field"><label class="field-label">Password</label><div style="position:relative"><input id="setOwnerPassword" type="password" readonly value="SECURELOGIN" style="padding-right:46px;cursor:not-allowed"/><button type="button" onclick="kpProfilePasswordInfo(this)" aria-label="Password security" title="Password security" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;background:transparent;color:var(--text);cursor:pointer;font-size:18px">👁️</button></div><small id="setOwnerPasswordNote" style="display:block;margin-top:5px;color:var(--text-dim)">For security, the original password is never stored or displayed. Use Change Password when needed.</small><button type="button" class="btn btn-outline-accent btn-sm" onclick="kpProfileChangePassword()" style="margin-top:8px">Change Password</button></div>
 <div class="field"><label class="field-label">Default Low Stock Alert (units)</label><input id="setLowStock" value="3"/></div>
 <div class="field"><label class="field-label">Shop Logo / Image (Optional)</label>
 <input accept="image/*" id="setShopLogoFile" onchange="handleShopLogoUpload(event)" style="display:none" type="file"/>
@@ -3074,8 +3076,25 @@ function loadShopProfileForm(){
   document.getElementById('setShopState').value=DB.shop.state||'';
   document.getElementById('setShopPincode').value=DB.shop.pincode||'';
   document.getElementById('setShopGST').value=DB.shop.gst||DB.shop.gstin||'';
+  const ownerEmailEl=document.getElementById('setOwnerEmail');
+  if(ownerEmailEl){
+    let profile={};try{profile=JSON.parse(localStorage.getItem('kp_pro_shop_profile')||'{}')||{}}catch(e){}
+    let bound={};try{bound=JSON.parse(localStorage.getItem('kp_pro_device_binding_v1')||'{}')||{}}catch(e){}
+    ownerEmailEl.value=String(profile.email||bound.email||'');
+    try{kpSb.auth.getUser().then(({data})=>{if(data&&data.user&&data.user.email){ownerEmailEl.value=data.user.email;const q=JSON.parse(localStorage.getItem('kp_pro_shop_profile')||'{}')||{};q.email=data.user.email;localStorage.setItem('kp_pro_shop_profile',JSON.stringify(q));}}).catch(()=>{})}catch(e){}
+  }
   document.getElementById('setLowStock').value=DB.shop.lowStock||3;
   renderShopLogoPreview();
+}
+function kpProfilePasswordInfo(btn){
+  const note=document.getElementById('setOwnerPasswordNote');
+  if(note){note.textContent='Your login password is protected by Supabase Auth and cannot be read back — even by the shop profile. You can securely replace it using Change Password.';note.style.color='var(--accent)';}
+  toast('Password is securely protected');
+}
+async function kpProfileChangePassword(){
+  const ok=await appConfirm('Change the shop owner login password now?');
+  if(!ok)return;
+  if(typeof kpShowResetPassword==='function')kpShowResetPassword();
 }
 function createBackup(){
   DB.lastBackup=new Date().toLocaleString('en-GB');
@@ -3529,7 +3548,7 @@ function kpSetCloudShopId(id){if(id)localStorage.setItem('kp_pro_cloud_shop_id',
 function kpGetCloudShopId(){return localStorage.getItem('kp_pro_cloud_shop_id')||''}
 async function kpGetMyShop(){const {data,error}=await kpSb.rpc('get_my_shop');if(error)throw error;return Array.isArray(data)&&data.length?data[0]:null}
 async function kpCreatePendingOwnerShop(){let p={};try{p=JSON.parse(localStorage.getItem('kp_pending_create_shop')||'{}')||{}}catch(e){}if(!p.shopName)return null;const {data,error}=await kpSb.rpc('create_shop',{p_shop_name:p.shopName,p_owner_name:p.ownerName,p_full_address:p.fullAddress,p_city:p.city,p_state:p.state,p_pincode:p.pincode,p_contact_number:p.contactNumber,p_gstin:p.gstin||''});if(error)throw error;localStorage.setItem('kp_pro_shop_profile',JSON.stringify(p));localStorage.setItem('kp_pro_shop_created','true');localStorage.removeItem('kp_pending_create_shop');return data}
-async function kpLoadCloudShop(shopId){if(!shopId)return;kpSetCloudShopId(shopId);const {data:shop}=await kpSb.from('shops').select('shop_name,owner_name,full_address,city,state,pincode,contact_number,gstin,logo').eq('id',shopId).maybeSingle();if(shop){const p={shopName:shop.shop_name||'',ownerName:shop.owner_name||'',fullAddress:shop.full_address||'',city:shop.city||'',state:shop.state||'',pincode:shop.pincode||'',contactNumber:shop.contact_number||'',gstin:shop.gstin||'',logo:shop.logo||''};localStorage.setItem('kp_pro_shop_profile',JSON.stringify(p))}const {data:cloud}=await kpSb.from('shop_data').select('data').eq('shop_id',shopId).maybeSingle();if(cloud&&cloud.data&&Object.keys(cloud.data).length){localStorage.setItem('kanakkuProDB_v1',JSON.stringify(cloud.data));kpLastCloudPayload=JSON.stringify(cloud.data)}else{let db={};try{db=JSON.parse(localStorage.getItem('kanakkuProDB_v1')||'{}')||{}}catch(e){}const u=(await kpSb.auth.getUser()).data.user;await kpSb.from('shop_data').upsert({shop_id:shopId,data:db,updated_by:u?u.id:null,updated_at:new Date().toISOString()},{onConflict:'shop_id'});kpLastCloudPayload=JSON.stringify(db)}kpSyncShopProfileToBilling()}
+async function kpLoadCloudShop(shopId){if(!shopId)return;kpSetCloudShopId(shopId);const {data:shop}=await kpSb.from('shops').select('shop_name,owner_name,full_address,city,state,pincode,contact_number,gstin,logo').eq('id',shopId).maybeSingle();if(shop){let prev={};try{prev=JSON.parse(localStorage.getItem('kp_pro_shop_profile')||'{}')||{}}catch(e){};let authEmail='';try{const gu=await kpSb.auth.getUser();authEmail=(gu.data&&gu.data.user&&gu.data.user.email)||''}catch(e){};const p={shopName:shop.shop_name||'',ownerName:shop.owner_name||'',fullAddress:shop.full_address||'',city:shop.city||'',state:shop.state||'',pincode:shop.pincode||'',contactNumber:shop.contact_number||'',gstin:shop.gstin||'',logo:shop.logo||'',email:authEmail||prev.email||''};localStorage.setItem('kp_pro_shop_profile',JSON.stringify(p))}const {data:cloud}=await kpSb.from('shop_data').select('data').eq('shop_id',shopId).maybeSingle();if(cloud&&cloud.data&&Object.keys(cloud.data).length){localStorage.setItem('kanakkuProDB_v1',JSON.stringify(cloud.data));kpLastCloudPayload=JSON.stringify(cloud.data)}else{let db={};try{db=JSON.parse(localStorage.getItem('kanakkuProDB_v1')||'{}')||{}}catch(e){}const u=(await kpSb.auth.getUser()).data.user;await kpSb.from('shop_data').upsert({shop_id:shopId,data:db,updated_by:u?u.id:null,updated_at:new Date().toISOString()},{onConflict:'shop_id'});kpLastCloudPayload=JSON.stringify(db)}kpSyncShopProfileToBilling()}
 async function kpCloudSave(){const shopId=kpGetCloudShopId();if(!shopId)return;const {data:{session}}=await kpSb.auth.getSession();if(!session)return;const raw=localStorage.getItem('kanakkuProDB_v1')||'{}';if(raw===kpLastCloudPayload)return;let db={};try{db=JSON.parse(raw)||{}}catch(e){return}const {error}=await kpSb.from('shop_data').upsert({shop_id:shopId,data:db,updated_by:session.user.id,updated_at:new Date().toISOString()},{onConflict:'shop_id'});if(!error)kpLastCloudPayload=raw}
 function kpStartCloudSync(){if(kpCloudTimer)clearInterval(kpCloudTimer);kpCloudTimer=setInterval(kpCloudSave,2500)}
 function kpSetAccessFromShop(my){
