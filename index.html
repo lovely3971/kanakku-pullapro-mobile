@@ -3481,51 +3481,64 @@ renderAll();
 <div class="bill-action-overlay" id="kpBluetoothPrintFlow" onclick="if(event.target===this)kpCloseBluetoothPrintFlowUI()">
   <div class="bill-action-modal" style="width:min(520px,94vw)">
     <div class="bill-action-head"><div><div style="font-size:10px;color:var(--accent);font-weight:900;letter-spacing:.8px">PRINT BILL</div><h3>Select Paper Size</h3></div><button class="bill-action-close" onclick="kpCloseBluetoothPrintFlowUI()" type="button">×</button></div>
-    <div style="padding:16px;display:grid;gap:10px">
+    <div id="kpBtPaperStep" style="padding:16px;display:grid;gap:10px">
       <button class="btn btn-primary" onclick="kpChooseBluetoothPrintSizeUI('58mm')" type="button">58mm Thermal</button>
       <button class="btn btn-primary" onclick="kpChooseBluetoothPrintSizeUI('80mm')" type="button">80mm Thermal</button>
       <button class="btn btn-dark" onclick="kpChooseBluetoothPrintSizeUI('auto')" type="button">Auto / Printer Paper</button>
       <button class="btn btn-dark" onclick="kpChooseBluetoothPrintSizeUI('a4')" type="button">A4</button>
       <button class="btn btn-dark" onclick="kpChooseBluetoothPrintSizeUI('a5')" type="button">A5</button>
       <button class="btn btn-dark" onclick="kpChooseBluetoothPrintSizeUI('letter')" type="button">Letter</button>
-      <div style="font-size:11px;line-height:1.5;color:var(--muted);text-align:center;margin-top:4px">58/80mm → thermal printer route. A4/A5/Auto/Letter → phone or computer system print screen; available supported printers can be selected there.</div>
+      <div style="font-size:11px;line-height:1.5;color:var(--muted);text-align:center;margin-top:4px">Paper size select pannunga. Next screen-la preview + Print button varum.</div>
+    </div>
+    <div id="kpBtPreviewStep" style="padding:16px;display:none;gap:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b id="kpBtPreviewTitle">Print Preview</b><button class="btn btn-dark" type="button" onclick="kpBtBackToPaperStep()">← Change Size</button></div>
+      <div style="background:#eef2f7;border-radius:12px;padding:10px;max-height:46vh;overflow:auto"><div id="kpBtPreviewHost" style="background:#fff;color:#000;margin:auto;transform-origin:top center"></div></div>
+      <div id="kpBtRouteNote" style="font-size:12px;line-height:1.5;color:var(--muted);text-align:center"></div>
+      <button class="btn btn-primary" style="width:100%;font-size:16px;padding:14px" type="button" onclick="kpConfirmBluetoothPrintUI()">🖨️ Print</button>
     </div>
   </div>
 </div>
-<script id="kpPrintFlowUiFixV2">
-/* KANAKKU PULLA PRO — iOS-safe print-flow UI wiring */
+<script id="kpPrintFlowUiFixV3">
+/* KANAKKU PULLA PRO — common Android/iPhone preview -> print flow */
+window.kpPendingPrintSize='58mm';
 window.kpOpenBluetoothPrintFlowUI=function(){
   try{
     var bill=(typeof currentActionBill==='function')?currentActionBill():null;
     if(!bill){ if(typeof toast==='function') toast('Open a bill first'); return; }
     var m=document.getElementById('kpBluetoothPrintFlow');
     if(!m){ if(typeof toast==='function') toast('Print options unavailable'); return; }
-    m.style.display='flex';
-    m.style.zIndex='20000';
-    m.classList.add('active');
-    document.body.style.overflow='hidden';
-  }catch(e){ console.error('Print flow open failed',e); if(typeof toast==='function') toast('Print options open aagala'); }
+    document.getElementById('kpBtPaperStep').style.display='grid';
+    document.getElementById('kpBtPreviewStep').style.display='none';
+    m.style.display='flex';m.style.zIndex='20000';m.classList.add('active');document.body.style.overflow='hidden';
+  }catch(e){console.error(e);if(typeof toast==='function')toast('Print options open aagala');}
 };
-window.kpCloseBluetoothPrintFlowUI=function(){
-  var m=document.getElementById('kpBluetoothPrintFlow');
-  if(m){ m.classList.remove('active'); m.style.display='none'; }
-  document.body.style.overflow='hidden'; /* bill action modal remains open behind it */
-};
+window.kpCloseBluetoothPrintFlowUI=function(){var m=document.getElementById('kpBluetoothPrintFlow');if(m){m.classList.remove('active');m.style.display='none';}document.body.style.overflow='hidden';};
+window.kpBtBackToPaperStep=function(){document.getElementById('kpBtPreviewStep').style.display='none';document.getElementById('kpBtPaperStep').style.display='grid';};
 window.kpChooseBluetoothPrintSizeUI=async function(size){
   try{
-    var sel=document.getElementById('billPaperSize');
-    if(sel) sel.value=size;
-    if(typeof onBillPaperSizeChange==='function') onBillPaperSizeChange();
-    window.kpCloseBluetoothPrintFlowUI();
-    await new Promise(function(r){setTimeout(r,120)});
+    window.kpPendingPrintSize=size;var sel=document.getElementById('billPaperSize');if(sel)sel.value=size;
+    if(typeof onBillPaperSizeChange==='function')onBillPaperSizeChange();
+    await new Promise(r=>setTimeout(r,80));
+    var src=document.getElementById('billActionPaper'),host=document.getElementById('kpBtPreviewHost');
+    if(src&&host){host.innerHTML=src.outerHTML;var clone=host.firstElementChild;if(clone){clone.removeAttribute('id');clone.style.margin='0 auto';clone.style.maxWidth='100%';}}
+    document.getElementById('kpBtPreviewTitle').textContent=(size==='58mm'?'58mm Thermal':size==='80mm'?'80mm Thermal':size.toUpperCase())+' — Print Preview';
+    var thermal=(size==='58mm'||size==='80mm');
+    var ios=(typeof kpIsIOS==='function'&&kpIsIOS());
+    document.getElementById('kpBtRouteNote').textContent=thermal?(ios?'iPhone: Print press pannina iOS Share/Printer App open aagum. Anga connected thermal printer select pannunga.':'Android: Print press pannina compatible Bluetooth printer connect/search flow start aagum.'):'Print press pannina phone system printer screen open aagum. Available printer select pannunga.';
+    document.getElementById('kpBtPaperStep').style.display='none';document.getElementById('kpBtPreviewStep').style.display='grid';
+  }catch(e){console.error(e);if(typeof toast==='function')toast('Preview ready panna mudiyala');}
+};
+window.kpConfirmBluetoothPrintUI=async function(){
+  try{
+    var size=window.kpPendingPrintSize||'58mm';
     if(size==='58mm'||size==='80mm'){
-      if(typeof kpMobileBluetoothPrintBill==='function') return await kpMobileBluetoothPrintBill(size);
-      if(typeof toast==='function') toast('Thermal print module loading — try once again');
-      return;
+      if(typeof kpMobileBluetoothPrintBill==='function')return await kpMobileBluetoothPrintBill(size);
+      if(typeof toast==='function')toast('Thermal print module unavailable');return;
     }
-    if(typeof toast==='function') toast('System print screen open aagum — available printer select pannunga');
-    if(typeof printCurrentBill==='function') return printCurrentBill();
-  }catch(e){ console.error('Print size route failed',e); if(typeof toast==='function') toast('Print route failed — try again'); }
+    window.kpCloseBluetoothPrintFlowUI();
+    if(typeof toast==='function')toast('Available printer select pannunga');
+    if(typeof printCurrentBill==='function')return printCurrentBill();
+  }catch(e){console.error(e);if(typeof toast==='function')toast('Print failed — try again');}
 };
 </script>
 <script id="kanakkuSystemKeyboardFlow">
