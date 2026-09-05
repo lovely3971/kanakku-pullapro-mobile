@@ -1,4 +1,4 @@
-const CACHE='kanakku-pulla-pro-v7-unified-print-hotfix';
+const CACHE='kanakku-pulla-pro-v8-clean-unified-print';
 const CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./activate-design.webp','./shop-design.webp','./refresh-buffer-logo.jpeg'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
