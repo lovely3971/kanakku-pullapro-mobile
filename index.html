@@ -1404,14 +1404,14 @@ body[data-kp-light-theme="1"] tr:hover td{background:rgba(var(--accent-rgb),.06)
 <div class="field" style="margin-top:10px"><label class="field-label">Select Product</label><select id="barcodeProductSelect" onchange="selectBarcodeProduct()"><option value="">Select a product</option></select></div>
 <div class="select-product-box" id="barcodeProductDetail" style="display:none"><div class="prod-thumb"></div><div id="barcodeProductInfo"></div></div>
 <div class="grid g2" style="margin-top:12px"><div class="field"><label class="field-label">PCS Text (Optional)</label><input id="barcodePcsText" maxlength="16" oninput="previewLabelsLive()" value="PCS"/></div><div class="field"><label class="field-label">No. of Labels</label><input id="labelQty" max="500" min="1" type="number" value="3"/></div></div>
-<div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-primary" onclick="previewLabels()" style="flex:1">Preview Labels</button><button class="btn btn-dark" onclick="printBarcodeLabels()" style="flex:1">Print Labels</button></div>
+<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn btn-primary" onclick="previewLabels()" style="flex:1">Preview Labels</button><button class="btn btn-dark" onclick="printBarcodeLabels()" style="flex:1">Print Labels</button><button class="btn btn-outline-accent" onclick="kpMobileBluetoothPrintSelectedLabels()" style="flex:1 1 100%">📱 Bluetooth Label Print</button></div>
 </div>
 <div class="card" style="margin-top:14px">
 <h3 class="block-title">2. Bulk Label Printing</h3>
 <div class="grid g2"><div class="field"><label class="field-label">Product</label><select id="bulkBarcodeProduct"></select></div><div class="field"><label class="field-label">No. of Labels</label><input id="bulkBarcodeQty" min="1" type="number" value="3"/></div></div>
 <div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-primary" onclick="addBulkBarcodeItem()" style="flex:1">+ Add Product</button><button class="btn btn-dark" onclick="clearBulkBarcodeItems()" style="flex:1">Clear</button></div>
 <div id="bulkBarcodeList" style="margin-top:12px"></div>
-<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-dark" onclick="previewBulkBarcodeLabels()" style="flex:1">Preview Bulk</button><button class="btn btn-primary" onclick="printBulkBarcodeLabels()" style="flex:1">Print All Labels</button></div>
+<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn btn-dark" onclick="previewBulkBarcodeLabels()" style="flex:1">Preview Bulk</button><button class="btn btn-primary" onclick="printBulkBarcodeLabels()" style="flex:1">Print All Labels</button><button class="btn btn-outline-accent" onclick="kpMobileBluetoothPrintBulkLabels()" style="flex:1 1 100%">📱 Bluetooth Print All</button></div>
 </div>
 <div class="card" style="margin-top:14px">
 <h3 class="block-title">3. Label Design &amp; Alignment</h3>
@@ -3418,6 +3418,7 @@ renderAll();
 <div class="bill-action-tools">
 <button class="btn btn-dark" onclick="shareCurrentBillFile()">Share PDF / Files</button>
 <button class="btn btn-outline-accent" onclick="printCurrentBill()">Print Bill</button>
+<button class="btn btn-primary" onclick="kpMobileBluetoothPrintBill()">📱 Bluetooth Thermal</button>
 </div>
 <div id="billPrintSettings">
 <label>Paper Size</label>
@@ -4175,4 +4176,132 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+
+<style id="kpMobileBluetoothStyles">
+#kpBtFab{position:fixed;right:14px;bottom:78px;z-index:1500;border:0;border-radius:999px;padding:11px 14px;background:#111;color:#fff;font-weight:900;box-shadow:0 10px 28px rgba(0,0,0,.28);font-size:12px}
+#kpBtSetup{display:none;position:fixed;inset:0;z-index:10050;background:rgba(0,0,0,.62);padding:16px;align-items:center;justify-content:center}
+#kpBtSetup.active{display:flex}.kp-bt-card{width:min(430px,100%);background:var(--surface,#fff);color:var(--text,#111);border-radius:20px;box-shadow:0 24px 80px rgba(0,0,0,.4);overflow:hidden;border:1px solid var(--border,#ddd)}
+.kp-bt-head{padding:16px 18px;background:linear-gradient(120deg,#113511,#62b91a);color:#fff;display:flex;justify-content:space-between;gap:12px;align-items:center}.kp-bt-head h3{margin:0;font-size:17px}.kp-bt-x{border:0;background:rgba(255,255,255,.16);color:#fff;width:34px;height:34px;border-radius:10px;font-size:20px}
+.kp-bt-body{padding:16px}.kp-bt-status{padding:11px 12px;border-radius:12px;background:var(--surface2,#f3f5f3);font-size:12px;line-height:1.45;margin-bottom:12px}.kp-bt-status b{color:var(--accent,#5fae18)}
+.kp-bt-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.kp-bt-actions button{min-height:44px}.kp-bt-note{font-size:11px;color:var(--text-dim,#666);line-height:1.45;margin-top:12px}
+@media(min-width:900px){#kpBtFab{display:none}}
+</style>
+<button id="kpBtFab" type="button" onclick="kpOpenMobilePrinterSetup()">🖨️ Mobile Printer</button>
+<div id="kpBtSetup" onclick="if(event.target===this)kpCloseMobilePrinterSetup()">
+  <div class="kp-bt-card">
+    <div class="kp-bt-head"><div><div style="font-size:10px;font-weight:900;opacity:.85">KANAKKU PULLA PRO</div><h3>Mobile Bluetooth Printer</h3></div><button class="kp-bt-x" onclick="kpCloseMobilePrinterSetup()">×</button></div>
+    <div class="kp-bt-body">
+      <div class="kp-bt-status" id="kpBtStatus"><b>Status:</b> Not connected</div>
+      <div class="kp-bt-actions">
+        <button class="btn btn-primary" type="button" onclick="kpBtConnect()">Connect Printer</button>
+        <button class="btn btn-dark" type="button" onclick="kpBtDisconnect()">Disconnect</button>
+        <button class="btn btn-outline-accent" type="button" onclick="kpBtTestReceipt()">Test Receipt</button>
+        <button class="btn btn-outline-accent" type="button" onclick="kpBtTestLabel()">Test Label</button>
+      </div>
+      <div class="kp-bt-note" id="kpBtHelp">Android Chrome/PWA: direct BLE printing will be tried first. Bill print supports the selected <b>58mm Thermal</b> or <b>80mm Thermal</b> paper size. iPhone/iPad: Safari/PWA does not expose Web Bluetooth, so Kanakku Pulla will prepare the selected bill/label and open the iOS Share sheet for a compatible Bluetooth printer app. For bills keep the printer in <b>Receipt Mode</b>. For labels keep it in <b>Label Mode / TSPL</b>.</div>
+    </div>
+  </div>
+</div>
+<script id="kpMobileBluetoothV1">
+/* ===== KANAKKU PULLA PRO — MOBILE BLUETOOTH PRINTING V1 =====
+   Safe additive integration. Existing browser/system print paths are untouched.
+   Android Chromium/PWA: attempts direct BLE write using common thermal-printer GATT services.
+   iOS/iPadOS or unsupported browsers: native Share-sheet fallback to a compatible printer app.
+*/
+const KP_BT_SERVICES=[
+ '0000ffe0-0000-1000-8000-00805f9b34fb','0000ff00-0000-1000-8000-00805f9b34fb',
+ '000018f0-0000-1000-8000-00805f9b34fb','e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+ '49535343-fe7d-4ae5-8fa9-9fafd205e455'
+];
+let kpBtDevice=null,kpBtServer=null,kpBtChar=null,kpBtBusy=false;
+function kpIsIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1)}
+function kpBtDirectSupported(){return !!(navigator.bluetooth&&navigator.bluetooth.requestDevice)&&!kpIsIOS()}
+function kpBtSetStatus(msg,ok=false){const e=document.getElementById('kpBtStatus');if(e)e.innerHTML='<b>Status:</b> '+msg;try{localStorage.setItem('kp_mobile_bt_last_status',String(msg))}catch(_){}}
+function kpOpenMobilePrinterSetup(){document.getElementById('kpBtSetup')?.classList.add('active');if(kpBtChar&&kpBtDevice?.gatt?.connected)kpBtSetStatus('Connected — '+(kpBtDevice.name||'Bluetooth Printer'));else if(!kpBtDirectSupported())kpBtSetStatus('Share mode — direct Web Bluetooth is not available on this iPhone/browser');}
+function kpCloseMobilePrinterSetup(){document.getElementById('kpBtSetup')?.classList.remove('active')}
+async function kpBtConnect(){
+ if(!kpBtDirectSupported()){kpBtSetStatus('Share mode only on this device/browser');toast('iPhone-la Share sheet route use aagum');return false;}
+ try{
+   kpBtSetStatus('Choose BT-58L / BT-582 in the Bluetooth list...');
+   kpBtDevice=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:KP_BT_SERVICES});
+   kpBtDevice.addEventListener('gattserverdisconnected',()=>{kpBtChar=null;kpBtServer=null;kpBtSetStatus('Disconnected')});
+   kpBtServer=await kpBtDevice.gatt.connect();
+   let writable=null;
+   for(const uuid of KP_BT_SERVICES){
+     try{const svc=await kpBtServer.getPrimaryService(uuid);const chars=await svc.getCharacteristics();writable=chars.find(c=>c.properties.writeWithoutResponse||c.properties.write);if(writable)break;}catch(_){ }
+   }
+   if(!writable){try{const svcs=await kpBtServer.getPrimaryServices();for(const svc of svcs){const chars=await svc.getCharacteristics();writable=chars.find(c=>c.properties.writeWithoutResponse||c.properties.write);if(writable)break;}}catch(_){}}
+   if(!writable)throw new Error('Writable Bluetooth service not found');
+   kpBtChar=writable;kpBtSetStatus('Connected — '+(kpBtDevice.name||'Bluetooth Printer'),true);try{localStorage.setItem('kp_mobile_bt_printer_name',kpBtDevice.name||'Bluetooth Printer')}catch(_){}toast('Bluetooth printer connected');return true;
+ }catch(e){console.error('KP Bluetooth connect',e);kpBtSetStatus('Connect failed — '+(e.message||'try again'));toast('Printer connect aagala. Share mode use pannunga.');return false;}
+}
+function kpBtDisconnect(){try{if(kpBtDevice?.gatt?.connected)kpBtDevice.gatt.disconnect()}catch(_){}kpBtChar=null;kpBtServer=null;kpBtSetStatus('Disconnected');}
+function kpSleep(ms){return new Promise(r=>setTimeout(r,ms))}
+async function kpBtWrite(bytes){
+ if(!kpBtChar||!kpBtDevice?.gatt?.connected){if(!(await kpBtConnect()))return false;}
+ const data=bytes instanceof Uint8Array?bytes:new Uint8Array(bytes);const chunk=180;
+ for(let i=0;i<data.length;i+=chunk){const part=data.slice(i,i+chunk);if(kpBtChar.properties.writeWithoutResponse&&kpBtChar.writeValueWithoutResponse)await kpBtChar.writeValueWithoutResponse(part);else await kpBtChar.writeValue(part);await kpSleep(10)}
+ return true;
+}
+function kpAscii(s){return new TextEncoder().encode(String(s).replace(/[^\x20-\x7E\r\n]/g,'?'))}
+async function kpBtTestReceipt(){if(kpBtBusy)return;kpBtBusy=true;try{const a=[27,64,27,97,1,...kpAscii('KANAKKU PULLA PRO\nBT-58L TEST RECEIPT\n-------------------------------\nReceipt Mode OK\n\n\n')];if(await kpBtWrite(new Uint8Array(a)))toast('Test receipt sent');}finally{kpBtBusy=false}}
+async function kpBtTestLabel(){if(kpBtBusy)return;kpBtBusy=true;try{const txt='SIZE 35 mm,22 mm\r\nGAP 2 mm,0\r\nDIRECTION 1\r\nCLS\r\nTEXT 20,20,"3",0,1,1,"KANAKKU PULLA PRO"\r\nTEXT 20,65,"2",0,1,1,"BT-58L LABEL TEST"\r\nPRINT 1,1\r\n';if(await kpBtWrite(kpAscii(txt)))toast('Test label sent — printer Label/TSPL mode-la irukkanum');}finally{kpBtBusy=false}}
+function kpConcatBytes(parts){let n=parts.reduce((s,p)=>s+p.length,0),o=new Uint8Array(n),i=0;for(const p of parts){o.set(p,i);i+=p.length}return o}
+function kpCanvasMonochrome(src,targetW,targetH,rotate=false){
+ const c=document.createElement('canvas');c.width=Math.max(8,Math.round(targetW));c.height=Math.max(1,Math.round(targetH));const x=c.getContext('2d',{willReadFrequently:true});x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.imageSmoothingEnabled=true;
+ if(rotate){x.save();x.translate(c.width,0);x.rotate(Math.PI/2);x.drawImage(src,0,0,c.height,c.width);x.restore()}else x.drawImage(src,0,0,c.width,c.height);
+ const im=x.getImageData(0,0,c.width,c.height),d=im.data;for(let i=0;i<d.length;i+=4){const g=.299*d[i]+.587*d[i+1]+.114*d[i+2],v=g<170?0:255;d[i]=d[i+1]=d[i+2]=v;d[i+3]=255}x.putImageData(im,0,0);return c;
+}
+function kpEscPosRaster(canvas){
+ const w=canvas.width,h=canvas.height,ctx=canvas.getContext('2d',{willReadFrequently:true}),im=ctx.getImageData(0,0,w,h).data,wb=Math.ceil(w/8),parts=[new Uint8Array([27,64,27,97,1])],stripe=192;
+ for(let y0=0;y0<h;y0+=stripe){const sh=Math.min(stripe,h-y0),bits=new Uint8Array(wb*sh);for(let y=0;y<sh;y++){for(let x=0;x<w;x++){const i=((y0+y)*w+x)*4;if(im[i]<128)bits[y*wb+(x>>3)]|=(0x80>>(x&7));}}parts.push(new Uint8Array([29,118,48,0,wb&255,(wb>>8)&255,sh&255,(sh>>8)&255]),bits)}parts.push(new Uint8Array([10,10,10]));return kpConcatBytes(parts);
+}
+async function kpMobileBluetoothPrintBill(){
+ const b=currentActionBill();if(!b){toast('Open a bill first');return}if(kpBtBusy)return;kpBtBusy=true;
+ try{
+   const paper=document.getElementById('billPaperSize');
+   const paperSize=(paper?.value||'').toLowerCase();
+   if(paperSize!=='58mm'&&paperSize!=='80mm'){toast('Paper Size-la 58mm Thermal illa 80mm Thermal select pannunga');return;}
+   onBillPaperSizeChange();await kpSleep(80);
+   if(!kpBtDirectSupported()){toast('iPhone Share sheet open aagum — Bluetooth printer app select pannunga');await shareCurrentBillFile();return;}
+   if(!kpBtChar&&!(await kpBtConnect())){toast('Direct connect unavailable — Share PDF use pannunga');return;}
+   if(!(await ensurePdfLibraries()))throw new Error('Print renderer unavailable');
+   const el=document.getElementById('billActionPaper');if(!el)throw new Error('Bill preview unavailable');
+   const dots=(paperSize==='80mm'?576:384);
+   const shot=await html2canvas(el,{scale:2,backgroundColor:'#fff',useCORS:true,logging:false});
+   const h=Math.max(1,Math.round(shot.height*(dots/shot.width)));
+   const mono=kpCanvasMonochrome(shot,dots,h,false);
+   kpBtSetStatus('Printing '+paperSize+' receipt...');
+   await kpBtWrite(kpEscPosRaster(mono));
+   kpBtSetStatus('Connected — '+(kpBtDevice?.name||'Bluetooth Printer'));
+   toast(paperSize+' bill sent to Bluetooth printer');
+ }catch(e){console.error(e);toast('Bluetooth bill print failed. Printer Receipt Mode check pannunga.');}finally{kpBtBusy=false}
+}
+function kpLabelPhysicalDims(){if(isAnyBarcodeMode()){const d=readAnyBarcodeDims();return {w:d.l,h:d.h}}if(isJewelleryMode()){const d=readJewelDims();return {w:d.totalW,h:d.h}}return {w:35,h:22}}
+function kpLabelHtmlForProduct(p){if(isAnyBarcodeMode())return anyBarcodeOneLabel(p);if(isJewelleryMode())return jewelleryOneLabel(p);return barcodeOneLabel(p)}
+async function kpRenderLabelCanvas(p){
+ if(!(await ensurePdfLibraries()))throw new Error('Print renderer unavailable');const dims=kpLabelPhysicalDims();let w=dims.w,h=dims.h,rotate=false;if(w>55&&h<=55){rotate=true;[w,h]=[h,w]}if(w>55)throw new Error('This label needs a printer wider than 55 mm');
+ const host=document.createElement('div');host.style.cssText='position:fixed;left:-5000px;top:0;background:#fff;z-index:-1';host.innerHTML=kpLabelHtmlForProduct(p);document.body.appendChild(host);renderRealCode128(host);await kpSleep(80);const node=host.firstElementChild;const shot=await html2canvas(node,{scale:4,backgroundColor:'#fff',logging:false,useCORS:true});host.remove();const dotsPerMm=203/25.4,targetW=Math.max(8,Math.round(w*dotsPerMm)),targetH=Math.max(8,Math.round(h*dotsPerMm));return {canvas:kpCanvasMonochrome(shot,targetW,targetH,rotate),wmm:w,hmm:h};
+}
+function kpTsplBitmap(canvas,wmm,hmm,count=1){
+ const w=canvas.width,h=canvas.height,ctx=canvas.getContext('2d',{willReadFrequently:true}),im=ctx.getImageData(0,0,w,h).data,wb=Math.ceil(w/8),bits=new Uint8Array(wb*h);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4;if(im[i]<128)bits[y*wb+(x>>3)]|=(0x80>>(x&7));}
+ const head=kpAscii(`SIZE ${wmm.toFixed(1)} mm,${hmm.toFixed(1)} mm\r\nGAP 2 mm,0\r\nDIRECTION 1\r\nCLS\r\nBITMAP 0,0,${wb},${h},0,`),tail=kpAscii(`\r\nPRINT 1,${Math.max(1,Math.min(500,count))}\r\n`);return kpConcatBytes([head,bits,tail]);
+}
+async function kpShareLabelJobs(jobs){
+ if(!(await ensurePdfLibraries()))throw new Error('PDF engine unavailable');let pdf=null,pageNo=0;for(const j of jobs){const r=await kpRenderLabelCanvas(j.p);for(let k=0;k<j.count;k++){if(!pdf)pdf=new jspdf.jsPDF({orientation:r.wmm>=r.hmm?'landscape':'portrait',unit:'mm',format:[r.wmm,r.hmm],compress:true});else pdf.addPage([r.wmm,r.hmm],r.wmm>=r.hmm?'landscape':'portrait');pdf.addImage(r.canvas.toDataURL('image/png'),'PNG',0,0,r.wmm,r.hmm);pageNo++;}}
+ if(!pdf)throw new Error('No labels');const blob=pdf.output('blob'),file=new File([blob],'Kanakku-Pulla-Labels.pdf',{type:'application/pdf'});if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){await navigator.share({title:'Kanakku Pulla Labels',files:[file]});return}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),2500);toast('Label PDF saved — Bluetooth printer app-la open pannunga');
+}
+async function kpPrintLabelJobs(jobs){
+ if(!jobs.length){toast('No labels to print');return}if(kpBtBusy)return;kpBtBusy=true;try{
+   if(!kpBtDirectSupported()){toast('iPhone Share sheet open aagum — compatible Bluetooth printer app select pannunga');await kpShareLabelJobs(jobs);return;}
+   if(!kpBtChar&&!(await kpBtConnect())){toast('Direct connect unavailable');return;}
+   if(jewelLabelsPerRow()>1)toast('BT-58L 58mm-la labels one-by-one print aagum; 2UP/3UP-ku wider printer venum');
+   for(const j of jobs){const r=await kpRenderLabelCanvas(j.p);kpBtSetStatus('Printing label — '+(j.p.name||j.p.code||''));await kpBtWrite(kpTsplBitmap(r.canvas,r.wmm,r.hmm,j.count));await kpSleep(120)}kpBtSetStatus('Connected — '+(kpBtDevice?.name||'Bluetooth Printer'));toast('Labels sent to Bluetooth printer');
+ }catch(e){console.error(e);toast((e.message||'Bluetooth label print failed')+' — Label/TSPL mode check pannunga');}finally{kpBtBusy=false}
+}
+function kpMobileBluetoothPrintSelectedLabels(){if(!selectedBarcodeProduct){toast('Select a product first');return}const qty=Math.max(1,Math.min(500,parseInt(document.getElementById('labelQty')?.value||1,10)));kpPrintLabelJobs([{p:selectedBarcodeProduct,count:qty}])}
+function kpMobileBluetoothPrintBulkLabels(){if(!bulkBarcodeItems.length){toast('Add products to bulk list');return}const jobs=bulkBarcodeItems.map(x=>({p:DB.products.find(q=>q.id===x.id),count:Math.max(1,Math.min(500,parseInt(x.qty||1,10)))})).filter(x=>x.p);kpPrintLabelJobs(jobs)}
+window.addEventListener('load',()=>{if(!kpBtDirectSupported()){const h=document.getElementById('kpBtHelp');if(h)h.innerHTML='iPhone/iPad detected: direct Web Bluetooth is not available in Safari/PWA. Kanakku Pulla will prepare the selected 58mm/80mm bill or label PDF and open the iOS Share sheet. Select a compatible Bluetooth thermal-printer app there. Bill: <b>Receipt Mode</b>. Label: <b>Label Mode / TSPL</b>.'}});
+</script>
+
 </body></html>
