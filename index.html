@@ -1121,7 +1121,7 @@ body[data-kp-light-theme="1"] tr:hover td{background:rgba(var(--accent-rgb),.06)
 <input id="pEditId" type="hidden"/>
 <div class="grid g2">
 <div class="field"><label class="field-label">Product Name <span class="req">*</span></label><input id="pName" placeholder="Enter product name"/></div>
-<div class="field"><label class="field-label">Barcode / Code <span class="req">*</span></label><input id="pCode" placeholder="Enter barcode / product code"/></div>
+<div class="field"><label class="field-label">Barcode / Code <span class="req">*</span></label><div style="display:flex;gap:8px;align-items:center"><input id="pCode" placeholder="Enter barcode / product code" style="flex:1;min-width:0"/><button type="button" class="btn btn-primary btn-sm" id="pAutoCodeBtn" onclick="generateUniqueProductCode()" style="white-space:nowrap">⚡ Auto Generate</button></div><small style="display:block;margin-top:5px;color:var(--text-dim)">Editable • Auto code uses 3 letters + 3 numbers or 4 letters + 4 numbers</small></div>
 <div class="field"><label class="field-label">Variant (Optional)</label><input id="pVariant" placeholder="Variant (optional)"/></div>
 <div class="field"><label class="field-label">Product Category (Optional)</label><select id="pCategory"><option value="">Select category</option></select></div>
 <div class="field"><label class="field-label">HSN / SAC Code (Optional)</label><input id="pHSN" placeholder="Enter HSN / SAC code (optional)"/></div>
@@ -1904,14 +1904,54 @@ function clearProductForm(){
   document.getElementById('pGST').value='0'; document.getElementById('pTaxType').value='Tax Exclusive';
   document.getElementById('addProdTitle').textContent='Add Product';
 }
-function saveProduct(){
+function kpNormalizeProductCode(v){return String(v||'').trim().toUpperCase();}
+async function kpIsProductCodeTaken(code,excludeId){
+  const wanted=kpNormalizeProductCode(code); if(!wanted)return false;
+  if((DB.products||[]).some(p=>p.id!==excludeId && kpNormalizeProductCode(p.code)===wanted))return true;
+  try{
+    if(typeof kpSb!=='undefined' && typeof kpGetCloudShopId==='function'){
+      const shopId=kpGetCloudShopId();
+      if(shopId){
+        const {data,error}=await kpSb.from('shop_data').select('data').eq('shop_id',shopId).maybeSingle();
+        if(!error && data && data.data && Array.isArray(data.data.products)){
+          if(data.data.products.some(p=>p.id!==excludeId && kpNormalizeProductCode(p.code)===wanted))return true;
+        }
+      }
+    }
+  }catch(e){}
+  return false;
+}
+function kpRandomProductCode(){
+  const letterCount=Math.random()<0.5?3:4, numberCount=letterCount;
+  const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ', digits='0123456789';
+  let a='',n='';
+  const rand=(max)=>{try{const x=new Uint32Array(1);crypto.getRandomValues(x);return x[0]%max}catch(e){return Math.floor(Math.random()*max)}};
+  for(let i=0;i<letterCount;i++)a+=letters[rand(letters.length)];
+  for(let i=0;i<numberCount;i++)n+=digits[rand(digits.length)];
+  return a+n;
+}
+async function generateUniqueProductCode(){
+  const btn=document.getElementById('pAutoCodeBtn'), field=document.getElementById('pCode');
+  const editId=document.getElementById('pEditId').value;
+  if(btn){btn.disabled=true;btn.textContent='Generating...';}
+  try{
+    for(let i=0;i<80;i++){
+      const candidate=kpRandomProductCode();
+      if(!(await kpIsProductCodeTaken(candidate,editId))){field.value=candidate;field.focus();toast('Unique code generated');return;}
+    }
+    toast('Could not generate a unique code. Please try again.');
+  }finally{if(btn){btn.disabled=false;btn.textContent='⚡ Auto Generate';}}
+}
+async function saveProduct(){
   const name=document.getElementById('pName').value.trim();
-  const code=document.getElementById('pCode').value.trim();
+  const code=kpNormalizeProductCode(document.getElementById('pCode').value);
+  document.getElementById('pCode').value=code;
   const cost=document.getElementById('pCost').value;
   const sell=document.getElementById('pSell').value;
   const hsn=document.getElementById('pHSN').value.trim();
   if(!name||!code||!cost||!sell){ toast('Please fill all required fields'); return; }
   const editId=document.getElementById('pEditId').value;
+  if(await kpIsProductCodeTaken(code,editId)){toast('This Barcode / Code already exists');document.getElementById('pCode').focus();return;}
   const data={
     id: editId || uid(),
     name, code,
@@ -1933,7 +1973,9 @@ function saveProduct(){
     DB.products.push(data);
     toast('Product saved');
   }
-  save(); clearProductForm(); refreshSelects(); renderProductList(); renderLowStock(); renderDashboard();
+  save();
+  try{if(typeof kpCloudSave==='function')await kpCloudSave();}catch(e){}
+  clearProductForm(); refreshSelects(); renderProductList(); renderLowStock(); renderDashboard();
   subNav('products','prod-list', document.querySelector('#page-products [data-sub=prod-list]'));
 }
 function editProduct(id){
@@ -3418,7 +3460,7 @@ renderAll();
 <div class="bill-action-tools">
 <button class="btn btn-dark" onclick="shareCurrentBillFile()">Share PDF / Files</button>
 <button class="btn btn-outline-accent" onclick="printCurrentBill()">Print Bill</button>
-<button class="btn btn-primary" onclick="kpMobileBluetoothPrintBill()">📱 Bluetooth Thermal</button>
+<button class="btn btn-primary" onclick="kpOpenBluetoothPrintFlow()">📱 Bluetooth Thermal</button>
 </div>
 <div id="billPrintSettings">
 <label>Paper Size</label>
@@ -3435,6 +3477,20 @@ renderAll();
 </div>
 <div class="bill-white-preview"><div class="bill-paper" id="billActionPaper"></div></div>
 </div>
+</div>
+<div class="bill-action-overlay" id="kpBluetoothPrintFlow" onclick="if(event.target===this)kpCloseBluetoothPrintFlow()">
+  <div class="bill-action-modal" style="width:min(520px,94vw)">
+    <div class="bill-action-head"><div><div style="font-size:10px;color:var(--accent);font-weight:900;letter-spacing:.8px">PRINT BILL</div><h3>Select Paper Size</h3></div><button class="bill-action-close" onclick="kpCloseBluetoothPrintFlow()">×</button></div>
+    <div style="padding:16px;display:grid;gap:10px">
+      <button class="btn btn-primary" onclick="kpChooseBluetoothPrintSize('58mm')">58mm Thermal</button>
+      <button class="btn btn-primary" onclick="kpChooseBluetoothPrintSize('80mm')">80mm Thermal</button>
+      <button class="btn btn-dark" onclick="kpChooseBluetoothPrintSize('auto')">Auto / Printer Paper</button>
+      <button class="btn btn-dark" onclick="kpChooseBluetoothPrintSize('a4')">A4</button>
+      <button class="btn btn-dark" onclick="kpChooseBluetoothPrintSize('a5')">A5</button>
+      <button class="btn btn-dark" onclick="kpChooseBluetoothPrintSize('letter')">Letter</button>
+      <div style="font-size:11px;line-height:1.5;color:var(--muted);text-align:center;margin-top:4px">58/80mm → thermal printer route. A4/A5/Auto/Letter → phone or computer system print screen; available supported printers can be selected there.</div>
+    </div>
+  </div>
 </div>
 <script id="kanakkuSystemKeyboardFlow">
 (function(){
@@ -4256,11 +4312,23 @@ function kpEscPosRaster(canvas){
  const w=canvas.width,h=canvas.height,ctx=canvas.getContext('2d',{willReadFrequently:true}),im=ctx.getImageData(0,0,w,h).data,wb=Math.ceil(w/8),parts=[new Uint8Array([27,64,27,97,1])],stripe=192;
  for(let y0=0;y0<h;y0+=stripe){const sh=Math.min(stripe,h-y0),bits=new Uint8Array(wb*sh);for(let y=0;y<sh;y++){for(let x=0;x<w;x++){const i=((y0+y)*w+x)*4;if(im[i]<128)bits[y*wb+(x>>3)]|=(0x80>>(x&7));}}parts.push(new Uint8Array([29,118,48,0,wb&255,(wb>>8)&255,sh&255,(sh>>8)&255]),bits)}parts.push(new Uint8Array([10,10,10]));return kpConcatBytes(parts);
 }
-async function kpMobileBluetoothPrintBill(){
+function kpOpenBluetoothPrintFlow(){
+ if(!currentActionBill()){toast('Open a bill first');return;}
+ const m=document.getElementById('kpBluetoothPrintFlow');if(m)m.classList.add('active');
+}
+function kpCloseBluetoothPrintFlow(){const m=document.getElementById('kpBluetoothPrintFlow');if(m)m.classList.remove('active');}
+async function kpChooseBluetoothPrintSize(size){
+ const sel=document.getElementById('billPaperSize');if(sel)sel.value=size;
+ onBillPaperSizeChange();kpCloseBluetoothPrintFlow();await kpSleep(80);
+ if(size==='58mm'||size==='80mm'){return kpMobileBluetoothPrintBill(size);}
+ toast('System print screen open aagum — available printer select pannunga');
+ printCurrentBill();
+}
+async function kpMobileBluetoothPrintBill(forcedSize){
  const b=currentActionBill();if(!b){toast('Open a bill first');return}if(kpBtBusy)return;kpBtBusy=true;
  try{
    const paper=document.getElementById('billPaperSize');
-   const paperSize=(paper?.value||'').toLowerCase();
+   const paperSize=(forcedSize||paper?.value||'').toLowerCase();
    if(paperSize!=='58mm'&&paperSize!=='80mm'){toast('Paper Size-la 58mm Thermal illa 80mm Thermal select pannunga');return;}
    onBillPaperSizeChange();await kpSleep(80);
    if(!kpBtDirectSupported()){toast('iPhone Share sheet open aagum — Bluetooth printer app select pannunga');await shareCurrentBillFile();return;}
