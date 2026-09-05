@@ -3494,8 +3494,7 @@ renderAll();
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b id="kpBtPreviewTitle">Print Preview</b><button class="btn btn-dark" type="button" onclick="kpBtBackToPaperStep()">← Change Size</button></div>
       <div style="background:#eef2f7;border-radius:12px;padding:10px;max-height:46vh;overflow:auto"><div id="kpBtPreviewHost" style="background:#fff;color:#000;margin:auto;transform-origin:top center"></div></div>
       <div id="kpBtRouteNote" style="font-size:12px;line-height:1.5;color:var(--muted);text-align:center"></div>
-      <button class="btn btn-primary" style="width:100%;font-size:16px;padding:14px" type="button" id="kpBtFinalPrintBtn" onclick="kpConfirmBluetoothPrintUI()">🖨️ Print</button>
-      <button class="btn btn-dark" style="width:100%;font-size:15px;padding:13px;display:none" type="button" id="kpBtPrinterAppBtn" onclick="kpIOSBillPrinterApp()">📤 Open Printer App</button>
+      <button class="btn btn-primary" style="width:100%;font-size:16px;padding:14px" type="button" onclick="kpConfirmBluetoothPrintUI()">🖨️ Print</button>
     </div>
   </div>
 </div>
@@ -3540,7 +3539,7 @@ window.kpOpenBluetoothPrintFlowUI=function(){
     m.style.display='flex';m.style.zIndex='20000';m.classList.add('active');document.body.style.overflow='hidden';
   }catch(e){console.error(e);if(typeof toast==='function')toast('Print options open aagala');}
 };
-window.kpCloseBluetoothPrintFlowUI=function(){var m=document.getElementById('kpBluetoothPrintFlow');if(m){m.classList.remove('active');m.style.display='none';}document.body.style.overflow='hidden';};
+window.kpCloseBluetoothPrintFlowUI=function(){var m=document.getElementById('kpBluetoothPrintFlow');if(m){m.classList.remove('active');m.style.display='none';}document.body.style.overflow='';};
 window.kpBtBackToPaperStep=function(){document.getElementById('kpBtPreviewStep').style.display='none';document.getElementById('kpBtPaperStep').style.display='grid';};
 window.kpChooseBluetoothPrintSizeUI=async function(size){
   try{
@@ -3552,7 +3551,7 @@ window.kpChooseBluetoothPrintSizeUI=async function(size){
     document.getElementById('kpBtPreviewTitle').textContent=(size==='58mm'?'58mm Thermal':size==='80mm'?'80mm Thermal':size.toUpperCase())+' — Print Preview';
     var thermal=(size==='58mm'||size==='80mm');
     var ios=(typeof kpIsIOS==='function'&&kpIsIOS());
-    document.getElementById('kpBtRouteNote').textContent=thermal?(ios?'iPhone: Print press pannina iOS Share/Printer App open aagum. Anga connected thermal printer select pannunga.':'Android: Print press pannina compatible Bluetooth printer connect/search flow start aagum.'):'Print press pannina phone system printer screen open aagum. Available printer select pannunga.';
+    document.getElementById('kpBtRouteNote').textContent=thermal?(ios?'iPhone: Print press pannina iOS system Print screen open aagum. Available printer irundha select pannunga.':'Android: Print press pannina compatible Bluetooth printer connect/search flow start aagum.'):'Print press pannina phone system printer screen open aagum. Available printer select pannunga.';
     document.getElementById('kpBtPaperStep').style.display='none';document.getElementById('kpBtPreviewStep').style.display='grid';
   }catch(e){console.error(e);if(typeof toast==='function')toast('Preview ready panna mudiyala');}
 };
@@ -3560,6 +3559,19 @@ window.kpConfirmBluetoothPrintUI=async function(){
   var started=false;
   try{
     var size=window.kpPendingPrintSize||'58mm';
+    var ios=(typeof kpIsIOS==='function'&&kpIsIOS());
+    var sel=document.getElementById('billPaperSize');if(sel)sel.value=size;
+    if(typeof onBillPaperSizeChange==='function')onBillPaperSizeChange();
+
+    // iPhone practical route: use the already-working iOS system Print dialog.
+    // Do not start animation before window.print(); iOS requires the print call from the user's tap.
+    if(ios){
+      window.kpCloseBluetoothPrintFlowUI();
+      if(typeof toast==='function')toast('iPhone Print screen open aagum — available printer select pannunga');
+      if(typeof printCurrentBill==='function'){ await Promise.resolve(printCurrentBill()); return; }
+      throw new Error('iPhone print module unavailable');
+    }
+
     if(typeof kpShowPrintSending==='function'){kpShowPrintSending();started=true;}
     await new Promise(function(r){setTimeout(r,180)});
     if(size==='58mm'||size==='80mm'){
@@ -3568,21 +3580,16 @@ window.kpConfirmBluetoothPrintUI=async function(){
         if(started&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);
         return;
       }
-      if(started&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);
-      if(typeof toast==='function')toast('Thermal print module unavailable');return;
+      throw new Error('Thermal print module unavailable');
     }
     window.kpCloseBluetoothPrintFlowUI();
-    if(typeof toast==='function')toast('Available printer select pannunga');
     if(typeof printCurrentBill==='function'){
-      var afterDone=false;
-      var onAfter=function(){if(afterDone)return;afterDone=true;window.removeEventListener('afterprint',onAfter);if(started&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);};
-      window.addEventListener('afterprint',onAfter);
       await Promise.resolve(printCurrentBill());
-      setTimeout(onAfter,900);
+      if(started&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);
       return;
     }
-    if(started&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);
-  }catch(e){console.error(e);if(started&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);if(typeof toast==='function')toast('Print failed — try again');}
+    throw new Error('Print module unavailable');
+  }catch(e){console.error(e);if(started&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);if(typeof toast==='function')toast(e.message||'Print failed');}
 };
 </script>
 <script id="kanakkuSystemKeyboardFlow">
@@ -4347,7 +4354,7 @@ if('serviceWorker' in navigator){
         <button class="btn btn-outline-accent" type="button" onclick="kpBtTestReceipt()">Test Receipt</button>
         <button class="btn btn-outline-accent" type="button" onclick="kpBtTestLabel()">Test Label</button>
       </div>
-      <div class="kp-bt-note" id="kpBtHelp">Android Chrome/PWA: direct BLE printing will be tried first. Bill print supports the selected <b>58mm Thermal</b> or <b>80mm Thermal</b> paper size. iPhone/iPad: Safari/PWA does not expose Web Bluetooth, so Kanakku Pulla will prepare the selected bill/label and open the iOS Share sheet for a compatible Bluetooth printer app. For bills keep the printer in <b>Receipt Mode</b>. For labels keep it in <b>Label Mode / TSPL</b>.</div>
+      <div class="kp-bt-note" id="kpBtHelp">Android Chrome/PWA: direct BLE printing will be tried first. Bill print supports the selected <b>58mm Thermal</b> or <b>80mm Thermal</b> paper size. iPhone/iPad: Safari/PWA direct Bluetooth print support illa. Bill-ku iOS system Print screen use aagum. Barcode label-ku Share Label use panni Open Label app available-na select pannunga. Labels-ku printer <b>Label Mode / TSPL</b>-la irukkanum.</div>
     </div>
   </div>
 </div>
@@ -4462,7 +4469,7 @@ async function kpPrintLabelJobs(jobs){
 }
 async function kpMobileBluetoothPrintSelectedLabels(){if(!selectedBarcodeProduct){toast('Select a product first');return}const qty=Math.max(1,Math.min(500,parseInt(document.getElementById('labelQty')?.value||1,10)));let shown=false;try{if(typeof kpShowPrintSending==='function'){kpShowPrintSending();shown=true;}await kpSleep(180);await kpPrintLabelJobs([{p:selectedBarcodeProduct,count:qty}]);if(shown&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);}catch(e){console.error(e);if(shown&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);}}
 async function kpMobileBluetoothPrintBulkLabels(){if(!bulkBarcodeItems.length){toast('Add products to bulk list');return}const jobs=bulkBarcodeItems.map(x=>({p:DB.products.find(q=>q.id===x.id),count:Math.max(1,Math.min(500,parseInt(x.qty||1,10)))})).filter(x=>x.p);let shown=false;try{if(typeof kpShowPrintSending==='function'){kpShowPrintSending();shown=true;}await kpSleep(180);await kpPrintLabelJobs(jobs);if(shown&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);}catch(e){console.error(e);if(shown&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);}}
-window.addEventListener('load',()=>{if(!kpBtDirectSupported()){const h=document.getElementById('kpBtHelp');if(h)h.innerHTML='iPhone/iPad detected: direct Web Bluetooth is not available in Safari/PWA. Kanakku Pulla will prepare the selected 58mm/80mm bill or label PDF and open the iOS Share sheet. Select a compatible Bluetooth thermal-printer app there. Bill: <b>Receipt Mode</b>. Label: <b>Label Mode / TSPL</b>.'}});
+window.addEventListener('load',()=>{if(!kpBtDirectSupported()){const h=document.getElementById('kpBtHelp');if(h)h.innerHTML='iPhone/iPad detected: direct Web Bluetooth Safari/PWA-la available illa. Bill-ku iOS system Print screen use pannunga. Barcode-ku Share Label → Open Label (available-na) use pannunga. Label printer <b>Label Mode / TSPL</b>-la irukkanum.'}});
 </script>
 
 
@@ -4489,7 +4496,6 @@ window.addEventListener('load',()=>{if(!kpBtDirectSupported()){const h=document.
       </div>
       <div id="kpBarcodeRouteNote" style="font-size:12px;line-height:1.5;color:var(--muted);text-align:center"></div>
       <button class="btn btn-primary" style="width:100%;font-size:16px;padding:14px" type="button" id="kpBarcodeFinalPrintBtn" onclick="kpConfirmBarcodePrintUI()">🖨️ Print</button>
-      <button class="btn btn-dark" style="width:100%;font-size:15px;padding:13px;display:none" type="button" id="kpBarcodePrinterAppBtn" onclick="kpIOSBarcodePrinterApp()">📤 Open Printer App</button>
     </div>
   </div>
 </div>
@@ -4542,7 +4548,7 @@ window.addEventListener('load',()=>{if(!kpBtDirectSupported()){const h=document.
 
   window.kpCloseBarcodePrintFlowUI=function(){
     var m=document.getElementById('kpBarcodePrintFlow');if(m){m.classList.remove('active');m.style.display='none';}
-    document.body.style.overflow='hidden';
+    document.body.style.overflow='';
   };
 
   window.kpBarcodeBackToPaperStep=function(){
@@ -4568,6 +4574,13 @@ window.addEventListener('load',()=>{if(!kpBtDirectSupported()){const h=document.
       }
       document.getElementById('kpBarcodePaperStep').style.display='none';
       document.getElementById('kpBarcodePreviewStep').style.display='grid';
+      var finalBtn=document.getElementById('kpBarcodeFinalPrintBtn');
+      if(ios() && (size==='58mm'||size==='80mm')){
+        if(finalBtn){finalBtn.textContent='Preparing Label…';finalBtn.disabled=true;}
+        await window.kpPrepareIOSLabelShare(jobs);
+        if(finalBtn){finalBtn.textContent='📤 Share Label / Open Label';finalBtn.disabled=false;}
+        if(note)note.textContent='iPhone: Share Label → Share Sheet-la Open Label irundha select pannunga. Open Label varalana Save/Files use panni label-a Open Label-la import pannunga.';
+      }else if(finalBtn){finalBtn.textContent='🖨️ Print';finalBtn.disabled=false;}
     }catch(e){console.error(e);msg('Barcode preview ready panna mudiyala');}
   };
 
@@ -4595,10 +4608,56 @@ window.addEventListener('load',()=>{if(!kpBtDirectSupported()){const h=document.
     }catch(e){console.error(e);try{w.close();}catch(_e){}msg('System print open aagala');return false;}
   }
 
+  window.kpIOSPreparedLabelFile=null;
+  window.kpPrepareIOSLabelShare=async function(jobs){
+    if(!ios())return null;
+    try{
+      if(!(await ensurePdfLibraries()))throw new Error('Label renderer unavailable');
+      // For a single selected label, share a PNG (printer apps commonly accept images).
+      if(window.kpBarcodePrintMode!=='bulk' && jobs.length===1 && jobs[0].count===1){
+        var r=await kpRenderLabelCanvas(jobs[0].p);
+        var blob=await new Promise(function(resolve){r.canvas.toBlob(resolve,'image/png');});
+        if(!blob)throw new Error('Label image unavailable');
+        window.kpIOSPreparedLabelFile=new File([blob],'Kanakku-Pulla-Label.png',{type:'image/png'});
+        return window.kpIOSPreparedLabelFile;
+      }
+      // Bulk/multiple labels: prepare one PDF file.
+      var pdf=null;
+      for(var a=0;a<jobs.length;a++){
+        var rr=await kpRenderLabelCanvas(jobs[a].p);
+        for(var k=0;k<jobs[a].count;k++){
+          if(!pdf)pdf=new jspdf.jsPDF({orientation:rr.wmm>=rr.hmm?'landscape':'portrait',unit:'mm',format:[rr.wmm,rr.hmm],compress:true});
+          else pdf.addPage([rr.wmm,rr.hmm],rr.wmm>=rr.hmm?'landscape':'portrait');
+          pdf.addImage(rr.canvas.toDataURL('image/png'),'PNG',0,0,rr.wmm,rr.hmm);
+        }
+      }
+      if(!pdf)throw new Error('No labels');
+      window.kpIOSPreparedLabelFile=new File([pdf.output('blob')],'Kanakku-Pulla-Labels.pdf',{type:'application/pdf'});
+      return window.kpIOSPreparedLabelFile;
+    }catch(e){console.error(e);window.kpIOSPreparedLabelFile=null;return null;}
+  };
+
+  window.kpSharePreparedLabelToPrinterApp=async function(){
+    var f=window.kpIOSPreparedLabelFile;
+    if(!f){msg('Label share file ready aagala — size reselect pannunga');return false;}
+    if(navigator.share && (!navigator.canShare || navigator.canShare({files:[f]}))){
+      try{await navigator.share({title:'Kanakku Pulla Label',files:[f]});return true;}
+      catch(e){if(e&&e.name==='AbortError')return false;throw e;}
+    }
+    var u=URL.createObjectURL(f),a=document.createElement('a');a.href=u;a.download=f.name;a.click();setTimeout(function(){URL.revokeObjectURL(u)},3000);
+    msg('Label saved — Open Label app-la import/open pannunga');return true;
+  };
+
   window.kpConfirmBarcodePrintUI=async function(){
     var jobs=getJobs();if(!jobs.length)return;
     var size=window.kpBarcodePendingSize||'58mm',shown=false;
     try{
+      // iPhone thermal-label route: Share Sheet must open directly from the user's tap.
+      // Do not show/delay with the print animation before navigator.share().
+      if(ios() && (size==='58mm'||size==='80mm')){
+        await window.kpSharePreparedLabelToPrinterApp();
+        return;
+      }
       if(typeof kpShowPrintSending==='function'){kpShowPrintSending();shown=true;}
       await sleep(180);
       if(size==='58mm'||size==='80mm'){
@@ -4612,93 +4671,6 @@ window.addEventListener('load',()=>{if(!kpBtDirectSupported()){const h=document.
       if(shown&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(ok);
     }catch(e){console.error(e);if(shown&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);msg(e.message||'Barcode print failed');}
   };
-})();
-</script>
-
-
-<!-- KANAKKU PULLA PRO V10 — iPHONE RELIABLE PRINT ROUTE -->
-<script id="kpIOSReliablePrintV10">
-(function(){
-  'use strict';
-  function ios(){
-    try{return typeof kpIsIOS==='function'?kpIsIOS():(/iPad|iPhone|iPod/.test(navigator.userAgent||'')||(/Macintosh/.test(navigator.userAgent||'')&&navigator.maxTouchPoints>1));}
-    catch(e){return false;}
-  }
-  function msg(t){try{if(typeof toast==='function')toast(t);}catch(e){}}
-  function showBillButtons(){
-    var primary=document.getElementById('kpBtFinalPrintBtn'),app=document.getElementById('kpBtPrinterAppBtn');
-    if(!primary||!app)return;
-    if(ios()){
-      primary.textContent='🖨️ iPhone Print';app.style.display='block';
-      var n=document.getElementById('kpBtRouteNote');
-      if(n)n.textContent='iPhone: iPhone Print = system printer screen. Open Printer App = bill PDF share → thermal printer app → Print.';
-    }else{primary.textContent='🖨️ Print';app.style.display='none';}
-  }
-  function showBarcodeButtons(){
-    var primary=document.getElementById('kpBarcodeFinalPrintBtn'),app=document.getElementById('kpBarcodePrinterAppBtn');
-    if(!primary||!app)return;
-    if(ios()){
-      primary.textContent='🖨️ iPhone Print';app.style.display='block';
-      var n=document.getElementById('kpBarcodeRouteNote');
-      if(n)n.textContent='iPhone: iPhone Print = system printer screen. Open Printer App = label PDF share → label printer app → Print.';
-    }else{primary.textContent='🖨️ Print';app.style.display='none';}
-  }
-  var oldBillChoose=window.kpChooseBluetoothPrintSizeUI;
-  if(typeof oldBillChoose==='function')window.kpChooseBluetoothPrintSizeUI=async function(size){await oldBillChoose(size);showBillButtons();};
-  var oldBarChoose=window.kpChooseBarcodePrintSizeUI;
-  if(typeof oldBarChoose==='function')window.kpChooseBarcodePrintSizeUI=async function(size){await oldBarChoose(size);showBarcodeButtons();};
-
-  var androidBillConfirm=window.kpConfirmBluetoothPrintUI;
-  window.kpConfirmBluetoothPrintUI=function(){
-    if(!ios())return androidBillConfirm&&androidBillConfirm();
-    try{
-      if(typeof kpCloseBluetoothPrintFlowUI==='function')kpCloseBluetoothPrintFlowUI();
-      msg('iPhone printer screen open aagudhu…');
-      if(typeof printCurrentBill==='function')return printCurrentBill();
-      return window.print();
-    }catch(e){console.error(e);msg('iPhone Print open aagala — Open Printer App use pannunga');}
-  };
-  window.kpIOSBillPrinterApp=async function(){
-    if(!ios())return androidBillConfirm&&androidBillConfirm();
-    try{
-      if(typeof shareCurrentBillFile==='function'){await shareCurrentBillFile();return;}
-      throw new Error('Share function unavailable');
-    }catch(e){console.error(e);msg('Printer App share open aagala — iPhone Print use pannunga');}
-  };
-
-  var androidBarConfirm=window.kpConfirmBarcodePrintUI;
-  function labelJobs(){
-    if(window.kpBarcodePrintMode==='bulk'){
-      if(!Array.isArray(window.bulkBarcodeItems)||!bulkBarcodeItems.length)return [];
-      return bulkBarcodeItems.map(function(x){var p=(window.DB&&DB.products)?DB.products.find(function(q){return q.id===x.id;}):null;return p?{p:p,count:Math.max(1,Math.min(500,parseInt(x.qty||1,10)))}:null;}).filter(Boolean);
-    }
-    if(!window.selectedBarcodeProduct)return [];
-    var q=document.getElementById('labelQty');
-    return [{p:selectedBarcodeProduct,count:Math.max(1,Math.min(500,parseInt(q&&q.value||1,10)))}];
-  }
-  window.kpConfirmBarcodePrintUI=function(){
-    if(!ios())return androidBarConfirm&&androidBarConfirm();
-    try{
-      if(typeof kpCloseBarcodePrintFlowUI==='function')kpCloseBarcodePrintFlowUI();
-      msg('iPhone printer screen open aagudhu…');
-      if(window.kpBarcodePrintMode==='bulk'&&typeof printBulkBarcodeLabels==='function')return printBulkBarcodeLabels();
-      if(typeof printBarcodeLabels==='function')return printBarcodeLabels();
-      throw new Error('Label print function unavailable');
-    }catch(e){console.error(e);msg('iPhone Print open aagala — Open Printer App use pannunga');}
-  };
-  window.kpIOSBarcodePrinterApp=async function(){
-    if(!ios())return androidBarConfirm&&androidBarConfirm();
-    try{
-      var j=labelJobs();if(!j.length){msg('Select/Add barcode product first');return;}
-      if(typeof kpShareLabelJobs==='function'){await kpShareLabelJobs(j);return;}
-      throw new Error('Label share unavailable');
-    }catch(e){console.error(e);msg('Printer App share open aagala — iPhone Print use pannunga');}
-  };
-
-  var closeBill=window.kpCloseBluetoothPrintFlowUI;
-  if(typeof closeBill==='function')window.kpCloseBluetoothPrintFlowUI=function(){closeBill();document.body.style.overflow='';};
-  var closeBar=window.kpCloseBarcodePrintFlowUI;
-  if(typeof closeBar==='function')window.kpCloseBarcodePrintFlowUI=function(){closeBar();document.body.style.overflow='';};
 })();
 </script>
 
