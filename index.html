@@ -3551,7 +3551,7 @@ window.kpChooseBluetoothPrintSizeUI=async function(size){
     document.getElementById('kpBtPreviewTitle').textContent=(size==='58mm'?'58mm Thermal':size==='80mm'?'80mm Thermal':size.toUpperCase())+' — Print Preview';
     var thermal=(size==='58mm'||size==='80mm');
     var ios=(typeof kpIsIOS==='function'&&kpIsIOS());
-    document.getElementById('kpBtRouteNote').textContent=thermal?(ios?'iPhone: Print press pannina iOS system Print screen open aagum. Available printer irundha select pannunga.':'Android: Print press pannina compatible Bluetooth printer connect/search flow start aagum.'):'Print press pannina phone system printer screen open aagum. Available printer select pannunga.';
+    document.getElementById('kpBtRouteNote').textContent=thermal?(ios?'iPhone: Print press pannina Share Sheet open aagum — Open Label / printer app select pannunga.':'Android: Print press pannina compatible Bluetooth printer connect/search flow start aagum.'):'Print press pannina phone system printer screen open aagum. Available printer select pannunga.';
     document.getElementById('kpBtPaperStep').style.display='none';document.getElementById('kpBtPreviewStep').style.display='grid';
   }catch(e){console.error(e);if(typeof toast==='function')toast('Preview ready panna mudiyala');}
 };
@@ -3563,18 +3563,19 @@ window.kpConfirmBluetoothPrintUI=async function(){
     var sel=document.getElementById('billPaperSize');if(sel)sel.value=size;
     if(typeof onBillPaperSizeChange==='function')onBillPaperSizeChange();
 
-    // iPhone practical route: use the already-working iOS system Print dialog.
-    // Do not start animation before window.print(); iOS requires the print call from the user's tap.
-    if(ios){
-      window.kpCloseBluetoothPrintFlowUI();
-      if(typeof toast==='function')toast('iPhone Print screen open aagum — available printer select pannunga');
-      if(typeof printCurrentBill==='function'){ await Promise.resolve(printCurrentBill()); return; }
-      throw new Error('iPhone print module unavailable');
-    }
-
-    if(typeof kpShowPrintSending==='function'){kpShowPrintSending();started=true;}
-    await new Promise(function(r){setTimeout(r,180)});
     if(size==='58mm'||size==='80mm'){
+      // Thermal bill (58mm/80mm): this paper size means a Bluetooth thermal printer,
+      // which is never an AirPrint device, so iPhone must NOT go through window.print().
+      // iPhone route: open the native Share Sheet directly inside the user's tap
+      // (no animation delay before it) so the user can pick "Open Label" / the printer app.
+      window.kpCloseBluetoothPrintFlowUI();
+      if(ios){
+        if(typeof toast==='function')toast('iPhone: Share sheet open aagum — Open Label / printer app select pannunga');
+        if(typeof shareCurrentBillFile==='function'){ await shareCurrentBillFile(); return; }
+        throw new Error('iPhone share module unavailable');
+      }
+      if(typeof kpShowPrintSending==='function'){kpShowPrintSending();started=true;}
+      await new Promise(function(r){setTimeout(r,180)});
       if(typeof kpMobileBluetoothPrintBill==='function'){
         await kpMobileBluetoothPrintBill(size);
         if(started&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);
@@ -3582,10 +3583,12 @@ window.kpConfirmBluetoothPrintUI=async function(){
       }
       throw new Error('Thermal print module unavailable');
     }
+
+    // Auto / A4 / A5 / Letter: a normal AirPrint / Android print-service paper size,
+    // so the phone's system print dialog is the correct route on both platforms.
     window.kpCloseBluetoothPrintFlowUI();
     if(typeof printCurrentBill==='function'){
       await Promise.resolve(printCurrentBill());
-      if(started&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);
       return;
     }
     throw new Error('Print module unavailable');
