@@ -1,4 +1,4 @@
-const CACHE='kanakku-pulla-pro-v9-ios-safe-share';
+const CACHE='kanakku-pulla-pro-v10-iphone-reliable-print';
 const CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./activate-design.webp','./shop-design.webp','./refresh-buffer-logo.jpeg'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
