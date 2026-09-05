@@ -1404,14 +1404,14 @@ body[data-kp-light-theme="1"] tr:hover td{background:rgba(var(--accent-rgb),.06)
 <div class="field" style="margin-top:10px"><label class="field-label">Select Product</label><select id="barcodeProductSelect" onchange="selectBarcodeProduct()"><option value="">Select a product</option></select></div>
 <div class="select-product-box" id="barcodeProductDetail" style="display:none"><div class="prod-thumb"></div><div id="barcodeProductInfo"></div></div>
 <div class="grid g2" style="margin-top:12px"><div class="field"><label class="field-label">PCS Text (Optional)</label><input id="barcodePcsText" maxlength="16" oninput="previewLabelsLive()" value="PCS"/></div><div class="field"><label class="field-label">No. of Labels</label><input id="labelQty" max="500" min="1" type="number" value="3"/></div></div>
-<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn btn-primary" onclick="previewLabels()" style="flex:1">Preview Labels</button><button class="btn btn-dark" onclick="printBarcodeLabels()" style="flex:1">Print Labels</button><button class="btn btn-outline-accent" onclick="kpMobileBluetoothPrintSelectedLabels()" style="flex:1 1 100%">📱 Bluetooth Label Print</button></div>
+<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn btn-primary" onclick="previewLabels()" style="flex:1">Preview Labels</button><button class="btn btn-dark" onclick="printBarcodeLabels()" style="flex:1">Print Labels</button><button class="btn btn-outline-accent" onclick="kpOpenBarcodePrintFlowUI('selected')" style="flex:1 1 100%">📱 Bluetooth Label Print</button></div>
 </div>
 <div class="card" style="margin-top:14px">
 <h3 class="block-title">2. Bulk Label Printing</h3>
 <div class="grid g2"><div class="field"><label class="field-label">Product</label><select id="bulkBarcodeProduct"></select></div><div class="field"><label class="field-label">No. of Labels</label><input id="bulkBarcodeQty" min="1" type="number" value="3"/></div></div>
 <div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-primary" onclick="addBulkBarcodeItem()" style="flex:1">+ Add Product</button><button class="btn btn-dark" onclick="clearBulkBarcodeItems()" style="flex:1">Clear</button></div>
 <div id="bulkBarcodeList" style="margin-top:12px"></div>
-<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn btn-dark" onclick="previewBulkBarcodeLabels()" style="flex:1">Preview Bulk</button><button class="btn btn-primary" onclick="printBulkBarcodeLabels()" style="flex:1">Print All Labels</button><button class="btn btn-outline-accent" onclick="kpMobileBluetoothPrintBulkLabels()" style="flex:1 1 100%">📱 Bluetooth Print All</button></div>
+<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn btn-dark" onclick="previewBulkBarcodeLabels()" style="flex:1">Preview Bulk</button><button class="btn btn-primary" onclick="printBulkBarcodeLabels()" style="flex:1">Print All Labels</button><button class="btn btn-outline-accent" onclick="kpOpenBarcodePrintFlowUI('bulk')" style="flex:1 1 100%">📱 Bluetooth Print All</button></div>
 </div>
 <div class="card" style="margin-top:14px">
 <h3 class="block-title">3. Label Design &amp; Alignment</h3>
@@ -2866,6 +2866,83 @@ function previewBulkBarcodeLabels(){
   if(scroller)scroller.scrollTop=0;
 }
 function printLabelHtml(html){const up=jewelLabelsPerRow();const sheetW=(35*up)+(5*Math.max(0,up-1));const w=window.open('','_blank');if(!w){toast('Allow popups to print labels');return;}w.document.write(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script><style>@page{size:${sheetW}mm auto;margin:0}html,body{margin:0;padding:0;background:#fff}.sheet{width:${sheetW}mm;display:grid;grid-template-columns:repeat(${up},35mm);column-gap:5mm;row-gap:0}.kp-label{width:35mm;height:22mm;box-sizing:border-box;padding:1mm 1.3mm .6mm;overflow:hidden;display:flex;flex-direction:column;align-items:center;font-family:Arial,sans-serif;break-inside:avoid;position:relative}.kp-el{position:relative;transform-origin:center}.kp-shop{font-weight:800;line-height:1;white-space:nowrap}.kp-normal-barcode-box{display:block!important;overflow:visible!important;flex:0 0 auto!important;transform-origin:center center!important;margin:.4mm 0!important;max-width:32mm!important}.kp-normal-barcode-box>.kp-bars{display:block!important;width:100%!important;height:100%!important;margin:0!important;background:none!important;transform:none!important;overflow:visible!important}.kp-bars rect{shape-rendering:crispEdges}.kp-code{font-weight:700;line-height:1}.kp-pcs{align-self:flex-start;font-weight:800;line-height:1;margin-top:.2mm}.kp-variant{line-height:1;min-height:1.5mm}.kp-price{font-weight:900;line-height:1;margin-top:.15mm}</style></head><body><div class="sheet">${html}</div><script>function draw(){if(typeof JsBarcode==='function'){document.querySelectorAll('svg.kp-bars[data-barcode]').forEach(function(svg){var v=svg.getAttribute('data-barcode')||'';if(v){try{JsBarcode(svg,v,{format:'CODE128',displayValue:false,margin:0,width:2,height:42,lineColor:'#000',background:'#fff'});}catch(e){}}});}setTimeout(function(){window.focus();window.print();},120);}if(document.readyState==='complete')draw();else window.addEventListener('load',draw);<\/script>
+
+<!-- KANAKKU PULLA PRO V6 — unified barcode print flow -->
+<div class="bill-action-overlay" id="kpBarcodePrintFlow" onclick="if(event.target===this)kpCloseBarcodePrintFlowUI()">
+  <div class="bill-action-modal" style="width:min(520px,94vw)">
+    <div class="bill-action-head"><div><div style="font-size:10px;color:var(--accent);font-weight:900;letter-spacing:.8px">PRINT BARCODE LABEL</div><h3>Select Printer / Paper</h3></div><button class="bill-action-close" onclick="kpCloseBarcodePrintFlowUI()" type="button">×</button></div>
+    <div id="kpBarcodePaperStep" style="padding:16px;display:grid;gap:10px">
+      <button class="btn btn-primary" onclick="kpChooseBarcodePrintRoute('58mm')" type="button">58mm Thermal / Label Printer</button>
+      <button class="btn btn-primary" onclick="kpChooseBarcodePrintRoute('80mm')" type="button">80mm Thermal / Label Printer</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('auto')" type="button">Auto / System Printer</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('a4')" type="button">A4</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('a5')" type="button">A5</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('letter')" type="button">Letter</button>
+      <div style="font-size:11px;line-height:1.5;color:var(--muted);text-align:center">Bill print மாதிரி same flow. Next screen-la barcode preview + Print button varum.</div>
+    </div>
+    <div id="kpBarcodePreviewStep" style="padding:16px;display:none;gap:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b id="kpBarcodePreviewTitle">Barcode Print Preview</b><button class="btn btn-dark" type="button" onclick="kpBarcodeBackToPaperStep()">← Change</button></div>
+      <div style="background:#eef2f7;border-radius:12px;padding:10px;max-height:46vh;overflow:auto"><div id="kpBarcodePreviewHost" style="background:#fff;color:#000;margin:auto;min-height:80px"></div></div>
+      <div id="kpBarcodeRouteNote" style="font-size:12px;line-height:1.5;color:var(--muted);text-align:center"></div>
+      <button class="btn btn-primary" style="width:100%;font-size:16px;padding:14px" type="button" onclick="kpConfirmBarcodePrintUI()">🖨️ Print</button>
+    </div>
+  </div>
+</div>
+<script id="kpUnifiedBillBarcodePrintV6">
+window.kpBarcodePrintMode='selected';window.kpBarcodePrintRoute='58mm';
+window.kpBarcodeJobs=function(){
+ if(window.kpBarcodePrintMode==='bulk') return (window.bulkBarcodeItems||[]).map(function(x){return {p:DB.products.find(function(q){return q.id===x.id}),count:Math.max(1,Math.min(500,parseInt(x.qty||1,10)))}}).filter(function(x){return x.p});
+ if(!window.selectedBarcodeProduct)return [];
+ return [{p:selectedBarcodeProduct,count:Math.max(1,Math.min(500,parseInt(document.getElementById('labelQty')?.value||1,10)))}];
+};
+window.kpOpenBarcodePrintFlowUI=function(mode){
+ window.kpBarcodePrintMode=mode||'selected';var jobs=kpBarcodeJobs();if(!jobs.length){toast(mode==='bulk'?'Add products to bulk list':'Select a product first');return;}
+ var m=document.getElementById('kpBarcodePrintFlow');document.getElementById('kpBarcodePaperStep').style.display='grid';document.getElementById('kpBarcodePreviewStep').style.display='none';m.style.display='flex';m.style.zIndex='21000';m.classList.add('active');document.body.style.overflow='hidden';
+};
+window.kpCloseBarcodePrintFlowUI=function(){var m=document.getElementById('kpBarcodePrintFlow');if(m){m.classList.remove('active');m.style.display='none';}document.body.style.overflow='';};
+window.kpBarcodeBackToPaperStep=function(){document.getElementById('kpBarcodePreviewStep').style.display='none';document.getElementById('kpBarcodePaperStep').style.display='grid';};
+window.kpChooseBarcodePrintRoute=function(route){
+ window.kpBarcodePrintRoute=route;var host=document.getElementById('kpBarcodePreviewHost');host.innerHTML='';
+ try{var src=document.getElementById('labelPreviewArea');if(src){var c=src.cloneNode(true);c.removeAttribute('id');c.style.margin='0 auto';host.appendChild(c);if(typeof renderRealCode128==='function')renderRealCode128(host);}}
+ catch(e){console.error(e)}
+ var thermal=route==='58mm'||route==='80mm',ios=(typeof kpIsIOS==='function'&&kpIsIOS());
+ document.getElementById('kpBarcodePreviewTitle').textContent=(thermal?route+' Label Printer':route.toUpperCase())+' — Print Preview';
+ document.getElementById('kpBarcodeRouteNote').textContent=thermal?(ios?'iPhone: Print → iOS Share/Label Printer App → BT-58L Label Mode → Print.':'Android: Print → compatible Bluetooth label printer connect/search → direct print.'):'Print → phone system printer screen. Available printer select pannunga.';
+ document.getElementById('kpBarcodePaperStep').style.display='none';document.getElementById('kpBarcodePreviewStep').style.display='grid';
+};
+window.kpConfirmBarcodePrintUI=async function(){
+ var jobs=kpBarcodeJobs(),route=window.kpBarcodePrintRoute||'58mm';if(!jobs.length){toast('No labels to print');return;}
+ try{
+   if(route==='58mm'||route==='80mm'){
+     if(typeof kpIsIOS==='function'&&kpIsIOS()){
+       /* Keep iOS share inside the user's Print tap; no delayed redirect. */
+       if(typeof kpShowPrintSending==='function')kpShowPrintSending();
+       try{await kpShareLabelJobs(jobs);if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);}catch(e){if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);throw e;}
+       return;
+     }
+     if(window.kpBarcodePrintMode==='bulk')return kpMobileBluetoothPrintBulkLabels();
+     return kpMobileBluetoothPrintSelectedLabels();
+   }
+   kpCloseBarcodePrintFlowUI();toast('Available printer select pannunga');
+   if(window.kpBarcodePrintMode==='bulk')return printBulkBarcodeLabels();
+   return printBarcodeLabels();
+ }catch(e){console.error(e);toast('Barcode print open aagala — try again');}
+};
+/* iPhone bill: open Share/Printer App directly from the final Print tap. Android stays on direct Bluetooth. */
+window.kpConfirmBluetoothPrintUI=async function(){
+ var size=window.kpPendingPrintSize||'58mm';
+ try{
+   if((size==='58mm'||size==='80mm') && typeof kpIsIOS==='function' && kpIsIOS()){
+     if(typeof kpShowPrintSending==='function')kpShowPrintSending();
+     try{await shareCurrentBillFile();if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);}catch(e){if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);throw e;}
+     return;
+   }
+   if(size==='58mm'||size==='80mm')return kpMobileBluetoothPrintBill(size);
+   kpCloseBluetoothPrintFlowUI();toast('Available printer select pannunga');return printCurrentBill();
+ }catch(e){console.error(e);if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);toast('Print open aagala — try again');}
+};
+</script>
+
 </body></html>`);w.document.close();}
 function printBarcodeLabels(){if(!selectedBarcodeProduct){toast('Select a product first');return;}const qty=Math.max(1,Math.min(500,parseInt(document.getElementById('labelQty').value||1,10)));printLabelHtml(Array.from({length:qty},()=>barcodeOneLabel(selectedBarcodeProduct)).join(''));}
 function printBulkBarcodeLabels(){
@@ -2922,7 +2999,84 @@ function anyBarcodeOneLabel(p){
   return `<div class="any-label" style="width:${d.l}mm;height:${d.h}mm"><div class="kp-el kp-shop" data-k="shop" style="left:1mm;right:1mm;top:${a.shopTop.toFixed(1)}mm;text-align:center;font-size:${fs('shop')}mm;${tr('shop')}">${barcodeAttr(shop)}</div><div class="kp-el any-barcode-box" data-k="barcode" style="left:${((d.l-a.barW)/2).toFixed(1)}mm;top:${a.barTop.toFixed(1)}mm;width:${a.barW.toFixed(1)}mm;height:${a.barH.toFixed(1)}mm;${tr('barcode')}"><svg class="kp-bars" data-barcode="${barcodeAttr(code)}"></svg></div><div class="kp-el kp-code" data-k="code" style="left:1mm;right:1mm;top:${a.codeTop.toFixed(1)}mm;text-align:center;font-size:${fs('code')}mm;${tr('code')}">${barcodeAttr(code)}</div><div class="kp-el kp-pcs" data-k="pcs" style="left:${Math.max(1,d.l*.07).toFixed(1)}mm;top:${a.rowTop.toFixed(1)}mm;font-size:${fs('pcs')}mm;font-weight:800;${tr('pcs')}">${barcodeAttr(pcs)}</div><div class="kp-el kp-variant" data-k="variant" style="left:24%;right:24%;top:${a.rowTop.toFixed(1)}mm;text-align:center;font-size:${fs('variant')}mm;${tr('variant')}">${barcodeAttr(variant)}</div><div class="kp-el kp-price" data-k="price" style="left:18%;right:18%;top:${a.priceTop.toFixed(1)}mm;text-align:center;font-size:${fs('price')}mm;font-weight:900;${tr('price')}">₹${fmtN(p.sell)}</div></div>`;
 }
 function renderAnyBarcodePreview(products){const area=document.getElementById('labelPreviewArea'),sc=document.getElementById('barcodePreviewScroller');if(!area)return;const up=jewelLabelsPerRow(),d=readAnyBarcodeDims();area.classList.remove('barcode-sheet-pro','bulk-preview-mode','jewel-preview-wrap','normal-mm-sheet');area.classList.add('any-barcode-wrap');area.style.setProperty('--any-up',up);area.style.setProperty('--any-gap',d.gap+'mm');area.style.gridTemplateColumns=`repeat(${up},${d.l}mm)`;area.style.columnGap=d.gap+'mm';area.style.minWidth=Math.max(d.w,(d.l*up)+(d.gap*Math.max(0,up-1)))+'mm';if(sc)sc.classList.add('bulk-scroll');area.innerHTML=products.map(p=>anyBarcodeOneLabel(p)).join('');renderRealCode128(area);bindPreviewElements();const used=(d.l*up)+(d.gap*Math.max(0,up-1)),st=document.getElementById('barcodePreviewStatus');if(st)st.textContent=`Any Barcode Label • ${up}-UP • L ${d.l} × H ${d.h} mm • Roll W ${d.w} mm • Used ${used.toFixed(1)} mm • Auto Fit ON`;const pt=document.getElementById('barcodePreviewTitle');if(pt)pt.textContent=`4. Live ${up}-UP Preview`;}
-function anyBarcodePrintDocument(labels){const d=readAnyBarcodeDims(),up=jewelLabelsPerRow();const holder=document.createElement('div');holder.innerHTML=labels;renderRealCode128(holder);const html=holder.innerHTML,w=window.open('','_blank');if(!w){toast('Allow popups to print labels');return;}const css=`@page{size:${d.w}mm auto;margin:0}html,body{margin:0;padding:0;background:#fff}.sheet{width:${d.w}mm;display:grid;grid-template-columns:repeat(${up},${d.l}mm);column-gap:${d.gap}mm;row-gap:0;align-items:start}.any-label{position:relative;width:${d.l}mm;height:${d.h}mm;box-sizing:border-box;background:#fff;color:#000;overflow:hidden;font-family:Arial,sans-serif;break-inside:avoid;page-break-inside:avoid}.kp-el{position:absolute!important;margin:0!important;color:#000!important;box-sizing:border-box;transform-origin:center center}.any-barcode-box{overflow:visible!important}.any-barcode-box .kp-bars{position:static!important;width:100%!important;height:100%!important;margin:0!important;transform:none!important;display:block!important}.kp-shop,.kp-code,.kp-variant,.kp-price{white-space:nowrap;overflow:hidden}.kp-bars{background:none!important;display:block!important}.kp-bars rect{shape-rendering:crispEdges}`;w.document.open();w.document.write('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+css+'</style></head><body><div class="sheet">'+html+'</div></body></html>');w.document.close();setTimeout(()=>{w.focus();w.print();},180);}
+function anyBarcodePrintDocument(labels){const d=readAnyBarcodeDims(),up=jewelLabelsPerRow();const holder=document.createElement('div');holder.innerHTML=labels;renderRealCode128(holder);const html=holder.innerHTML,w=window.open('','_blank');if(!w){toast('Allow popups to print labels');return;}const css=`@page{size:${d.w}mm auto;margin:0}html,body{margin:0;padding:0;background:#fff}.sheet{width:${d.w}mm;display:grid;grid-template-columns:repeat(${up},${d.l}mm);column-gap:${d.gap}mm;row-gap:0;align-items:start}.any-label{position:relative;width:${d.l}mm;height:${d.h}mm;box-sizing:border-box;background:#fff;color:#000;overflow:hidden;font-family:Arial,sans-serif;break-inside:avoid;page-break-inside:avoid}.kp-el{position:absolute!important;margin:0!important;color:#000!important;box-sizing:border-box;transform-origin:center center}.any-barcode-box{overflow:visible!important}.any-barcode-box .kp-bars{position:static!important;width:100%!important;height:100%!important;margin:0!important;transform:none!important;display:block!important}.kp-shop,.kp-code,.kp-variant,.kp-price{white-space:nowrap;overflow:hidden}.kp-bars{background:none!important;display:block!important}.kp-bars rect{shape-rendering:crispEdges}`;w.document.open();w.document.write('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+css+'</style></head><body><div class="sheet">'+html+'</div>
+<!-- KANAKKU PULLA PRO V6 — unified barcode print flow -->
+<div class="bill-action-overlay" id="kpBarcodePrintFlow" onclick="if(event.target===this)kpCloseBarcodePrintFlowUI()">
+  <div class="bill-action-modal" style="width:min(520px,94vw)">
+    <div class="bill-action-head"><div><div style="font-size:10px;color:var(--accent);font-weight:900;letter-spacing:.8px">PRINT BARCODE LABEL</div><h3>Select Printer / Paper</h3></div><button class="bill-action-close" onclick="kpCloseBarcodePrintFlowUI()" type="button">×</button></div>
+    <div id="kpBarcodePaperStep" style="padding:16px;display:grid;gap:10px">
+      <button class="btn btn-primary" onclick="kpChooseBarcodePrintRoute('58mm')" type="button">58mm Thermal / Label Printer</button>
+      <button class="btn btn-primary" onclick="kpChooseBarcodePrintRoute('80mm')" type="button">80mm Thermal / Label Printer</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('auto')" type="button">Auto / System Printer</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('a4')" type="button">A4</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('a5')" type="button">A5</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('letter')" type="button">Letter</button>
+      <div style="font-size:11px;line-height:1.5;color:var(--muted);text-align:center">Bill print மாதிரி same flow. Next screen-la barcode preview + Print button varum.</div>
+    </div>
+    <div id="kpBarcodePreviewStep" style="padding:16px;display:none;gap:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b id="kpBarcodePreviewTitle">Barcode Print Preview</b><button class="btn btn-dark" type="button" onclick="kpBarcodeBackToPaperStep()">← Change</button></div>
+      <div style="background:#eef2f7;border-radius:12px;padding:10px;max-height:46vh;overflow:auto"><div id="kpBarcodePreviewHost" style="background:#fff;color:#000;margin:auto;min-height:80px"></div></div>
+      <div id="kpBarcodeRouteNote" style="font-size:12px;line-height:1.5;color:var(--muted);text-align:center"></div>
+      <button class="btn btn-primary" style="width:100%;font-size:16px;padding:14px" type="button" onclick="kpConfirmBarcodePrintUI()">🖨️ Print</button>
+    </div>
+  </div>
+</div>
+<script id="kpUnifiedBillBarcodePrintV6">
+window.kpBarcodePrintMode='selected';window.kpBarcodePrintRoute='58mm';
+window.kpBarcodeJobs=function(){
+ if(window.kpBarcodePrintMode==='bulk') return (window.bulkBarcodeItems||[]).map(function(x){return {p:DB.products.find(function(q){return q.id===x.id}),count:Math.max(1,Math.min(500,parseInt(x.qty||1,10)))}}).filter(function(x){return x.p});
+ if(!window.selectedBarcodeProduct)return [];
+ return [{p:selectedBarcodeProduct,count:Math.max(1,Math.min(500,parseInt(document.getElementById('labelQty')?.value||1,10)))}];
+};
+window.kpOpenBarcodePrintFlowUI=function(mode){
+ window.kpBarcodePrintMode=mode||'selected';var jobs=kpBarcodeJobs();if(!jobs.length){toast(mode==='bulk'?'Add products to bulk list':'Select a product first');return;}
+ var m=document.getElementById('kpBarcodePrintFlow');document.getElementById('kpBarcodePaperStep').style.display='grid';document.getElementById('kpBarcodePreviewStep').style.display='none';m.style.display='flex';m.style.zIndex='21000';m.classList.add('active');document.body.style.overflow='hidden';
+};
+window.kpCloseBarcodePrintFlowUI=function(){var m=document.getElementById('kpBarcodePrintFlow');if(m){m.classList.remove('active');m.style.display='none';}document.body.style.overflow='';};
+window.kpBarcodeBackToPaperStep=function(){document.getElementById('kpBarcodePreviewStep').style.display='none';document.getElementById('kpBarcodePaperStep').style.display='grid';};
+window.kpChooseBarcodePrintRoute=function(route){
+ window.kpBarcodePrintRoute=route;var host=document.getElementById('kpBarcodePreviewHost');host.innerHTML='';
+ try{var src=document.getElementById('labelPreviewArea');if(src){var c=src.cloneNode(true);c.removeAttribute('id');c.style.margin='0 auto';host.appendChild(c);if(typeof renderRealCode128==='function')renderRealCode128(host);}}
+ catch(e){console.error(e)}
+ var thermal=route==='58mm'||route==='80mm',ios=(typeof kpIsIOS==='function'&&kpIsIOS());
+ document.getElementById('kpBarcodePreviewTitle').textContent=(thermal?route+' Label Printer':route.toUpperCase())+' — Print Preview';
+ document.getElementById('kpBarcodeRouteNote').textContent=thermal?(ios?'iPhone: Print → iOS Share/Label Printer App → BT-58L Label Mode → Print.':'Android: Print → compatible Bluetooth label printer connect/search → direct print.'):'Print → phone system printer screen. Available printer select pannunga.';
+ document.getElementById('kpBarcodePaperStep').style.display='none';document.getElementById('kpBarcodePreviewStep').style.display='grid';
+};
+window.kpConfirmBarcodePrintUI=async function(){
+ var jobs=kpBarcodeJobs(),route=window.kpBarcodePrintRoute||'58mm';if(!jobs.length){toast('No labels to print');return;}
+ try{
+   if(route==='58mm'||route==='80mm'){
+     if(typeof kpIsIOS==='function'&&kpIsIOS()){
+       /* Keep iOS share inside the user's Print tap; no delayed redirect. */
+       if(typeof kpShowPrintSending==='function')kpShowPrintSending();
+       try{await kpShareLabelJobs(jobs);if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);}catch(e){if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);throw e;}
+       return;
+     }
+     if(window.kpBarcodePrintMode==='bulk')return kpMobileBluetoothPrintBulkLabels();
+     return kpMobileBluetoothPrintSelectedLabels();
+   }
+   kpCloseBarcodePrintFlowUI();toast('Available printer select pannunga');
+   if(window.kpBarcodePrintMode==='bulk')return printBulkBarcodeLabels();
+   return printBarcodeLabels();
+ }catch(e){console.error(e);toast('Barcode print open aagala — try again');}
+};
+/* iPhone bill: open Share/Printer App directly from the final Print tap. Android stays on direct Bluetooth. */
+window.kpConfirmBluetoothPrintUI=async function(){
+ var size=window.kpPendingPrintSize||'58mm';
+ try{
+   if((size==='58mm'||size==='80mm') && typeof kpIsIOS==='function' && kpIsIOS()){
+     if(typeof kpShowPrintSending==='function')kpShowPrintSending();
+     try{await shareCurrentBillFile();if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);}catch(e){if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);throw e;}
+     return;
+   }
+   if(size==='58mm'||size==='80mm')return kpMobileBluetoothPrintBill(size);
+   kpCloseBluetoothPrintFlowUI();toast('Available printer select pannunga');return printCurrentBill();
+ }catch(e){console.error(e);if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);toast('Print open aagala — try again');}
+};
+</script>
+
+</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print();},180);}
 
 /* ============ JEWELLERY TAGS — SAFE EXTENSION ============ */
 const JEWEL_PRESETS={
@@ -3003,7 +3157,84 @@ function jewelleryPrintDocument(labels){
   const d=readJewelDims();const holder=document.createElement('div');holder.innerHTML=labels;renderRealCode128(holder);
   const html=holder.innerHTML;const w=window.open('','_blank');if(!w){toast('Allow popups to print labels');return;}
   const up=jewelLabelsPerRow(); const css='@page{margin:0}html,body{margin:0;padding:0;background:#fff}.sheet{display:grid;grid-template-columns:repeat('+up+',max-content);gap:0;align-items:start}.jewel-tag{position:relative;display:flex;align-items:center;background:transparent;color:#000;font-family:Arial,sans-serif;box-sizing:border-box;break-inside:avoid;page-break-inside:avoid}.jewel-body{height:100%;background:#fff;position:relative;overflow:hidden;display:block;padding:.6mm 1mm;box-sizing:border-box}.jewel-body .kp-el{position:absolute!important;margin:0!important;box-sizing:border-box}.jewel-body .kp-pcs{align-self:auto!important}.jewel-body .jewel-barcode-box{position:absolute!important;box-sizing:border-box!important;overflow:visible!important}.jewel-body .jewel-barcode-box .kp-bars{position:static!important;width:100%!important;height:100%!important;margin:0!important;transform:none!important;display:block!important}.jewel-tail{background:#fff;position:relative;flex:none}.jewel-tag.butterfly .jewel-body:after{content:"";position:absolute;top:0;bottom:0;left:50%;border-left:.25mm dashed #aaa}.jewel-tag.dumbbell .jewel-body{clip-path:polygon(0 0,42% 0,46% 30%,54% 30%,58% 0,100% 0,100% 100%,58% 100%,54% 70%,46% 70%,42% 100%,0 100%)}.kp-el{position:relative;transform-origin:center;color:#000}.kp-shop{font-weight:800;line-height:1;white-space:nowrap}.kp-bars{background:none;display:block}.kp-code{font-weight:700;line-height:1}.kp-pcs{align-self:flex-start;font-weight:800;line-height:1}.kp-variant{line-height:1}.kp-price{font-weight:900;line-height:1}';
-  w.document.open();w.document.write('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+css+'</style></head><body><div class="sheet">'+html+'</div></body></html>');w.document.close();setTimeout(()=>{w.focus();w.print();},180);
+  w.document.open();w.document.write('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+css+'</style></head><body><div class="sheet">'+html+'</div>
+<!-- KANAKKU PULLA PRO V6 — unified barcode print flow -->
+<div class="bill-action-overlay" id="kpBarcodePrintFlow" onclick="if(event.target===this)kpCloseBarcodePrintFlowUI()">
+  <div class="bill-action-modal" style="width:min(520px,94vw)">
+    <div class="bill-action-head"><div><div style="font-size:10px;color:var(--accent);font-weight:900;letter-spacing:.8px">PRINT BARCODE LABEL</div><h3>Select Printer / Paper</h3></div><button class="bill-action-close" onclick="kpCloseBarcodePrintFlowUI()" type="button">×</button></div>
+    <div id="kpBarcodePaperStep" style="padding:16px;display:grid;gap:10px">
+      <button class="btn btn-primary" onclick="kpChooseBarcodePrintRoute('58mm')" type="button">58mm Thermal / Label Printer</button>
+      <button class="btn btn-primary" onclick="kpChooseBarcodePrintRoute('80mm')" type="button">80mm Thermal / Label Printer</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('auto')" type="button">Auto / System Printer</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('a4')" type="button">A4</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('a5')" type="button">A5</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('letter')" type="button">Letter</button>
+      <div style="font-size:11px;line-height:1.5;color:var(--muted);text-align:center">Bill print மாதிரி same flow. Next screen-la barcode preview + Print button varum.</div>
+    </div>
+    <div id="kpBarcodePreviewStep" style="padding:16px;display:none;gap:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b id="kpBarcodePreviewTitle">Barcode Print Preview</b><button class="btn btn-dark" type="button" onclick="kpBarcodeBackToPaperStep()">← Change</button></div>
+      <div style="background:#eef2f7;border-radius:12px;padding:10px;max-height:46vh;overflow:auto"><div id="kpBarcodePreviewHost" style="background:#fff;color:#000;margin:auto;min-height:80px"></div></div>
+      <div id="kpBarcodeRouteNote" style="font-size:12px;line-height:1.5;color:var(--muted);text-align:center"></div>
+      <button class="btn btn-primary" style="width:100%;font-size:16px;padding:14px" type="button" onclick="kpConfirmBarcodePrintUI()">🖨️ Print</button>
+    </div>
+  </div>
+</div>
+<script id="kpUnifiedBillBarcodePrintV6">
+window.kpBarcodePrintMode='selected';window.kpBarcodePrintRoute='58mm';
+window.kpBarcodeJobs=function(){
+ if(window.kpBarcodePrintMode==='bulk') return (window.bulkBarcodeItems||[]).map(function(x){return {p:DB.products.find(function(q){return q.id===x.id}),count:Math.max(1,Math.min(500,parseInt(x.qty||1,10)))}}).filter(function(x){return x.p});
+ if(!window.selectedBarcodeProduct)return [];
+ return [{p:selectedBarcodeProduct,count:Math.max(1,Math.min(500,parseInt(document.getElementById('labelQty')?.value||1,10)))}];
+};
+window.kpOpenBarcodePrintFlowUI=function(mode){
+ window.kpBarcodePrintMode=mode||'selected';var jobs=kpBarcodeJobs();if(!jobs.length){toast(mode==='bulk'?'Add products to bulk list':'Select a product first');return;}
+ var m=document.getElementById('kpBarcodePrintFlow');document.getElementById('kpBarcodePaperStep').style.display='grid';document.getElementById('kpBarcodePreviewStep').style.display='none';m.style.display='flex';m.style.zIndex='21000';m.classList.add('active');document.body.style.overflow='hidden';
+};
+window.kpCloseBarcodePrintFlowUI=function(){var m=document.getElementById('kpBarcodePrintFlow');if(m){m.classList.remove('active');m.style.display='none';}document.body.style.overflow='';};
+window.kpBarcodeBackToPaperStep=function(){document.getElementById('kpBarcodePreviewStep').style.display='none';document.getElementById('kpBarcodePaperStep').style.display='grid';};
+window.kpChooseBarcodePrintRoute=function(route){
+ window.kpBarcodePrintRoute=route;var host=document.getElementById('kpBarcodePreviewHost');host.innerHTML='';
+ try{var src=document.getElementById('labelPreviewArea');if(src){var c=src.cloneNode(true);c.removeAttribute('id');c.style.margin='0 auto';host.appendChild(c);if(typeof renderRealCode128==='function')renderRealCode128(host);}}
+ catch(e){console.error(e)}
+ var thermal=route==='58mm'||route==='80mm',ios=(typeof kpIsIOS==='function'&&kpIsIOS());
+ document.getElementById('kpBarcodePreviewTitle').textContent=(thermal?route+' Label Printer':route.toUpperCase())+' — Print Preview';
+ document.getElementById('kpBarcodeRouteNote').textContent=thermal?(ios?'iPhone: Print → iOS Share/Label Printer App → BT-58L Label Mode → Print.':'Android: Print → compatible Bluetooth label printer connect/search → direct print.'):'Print → phone system printer screen. Available printer select pannunga.';
+ document.getElementById('kpBarcodePaperStep').style.display='none';document.getElementById('kpBarcodePreviewStep').style.display='grid';
+};
+window.kpConfirmBarcodePrintUI=async function(){
+ var jobs=kpBarcodeJobs(),route=window.kpBarcodePrintRoute||'58mm';if(!jobs.length){toast('No labels to print');return;}
+ try{
+   if(route==='58mm'||route==='80mm'){
+     if(typeof kpIsIOS==='function'&&kpIsIOS()){
+       /* Keep iOS share inside the user's Print tap; no delayed redirect. */
+       if(typeof kpShowPrintSending==='function')kpShowPrintSending();
+       try{await kpShareLabelJobs(jobs);if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);}catch(e){if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);throw e;}
+       return;
+     }
+     if(window.kpBarcodePrintMode==='bulk')return kpMobileBluetoothPrintBulkLabels();
+     return kpMobileBluetoothPrintSelectedLabels();
+   }
+   kpCloseBarcodePrintFlowUI();toast('Available printer select pannunga');
+   if(window.kpBarcodePrintMode==='bulk')return printBulkBarcodeLabels();
+   return printBarcodeLabels();
+ }catch(e){console.error(e);toast('Barcode print open aagala — try again');}
+};
+/* iPhone bill: open Share/Printer App directly from the final Print tap. Android stays on direct Bluetooth. */
+window.kpConfirmBluetoothPrintUI=async function(){
+ var size=window.kpPendingPrintSize||'58mm';
+ try{
+   if((size==='58mm'||size==='80mm') && typeof kpIsIOS==='function' && kpIsIOS()){
+     if(typeof kpShowPrintSending==='function')kpShowPrintSending();
+     try{await shareCurrentBillFile();if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);}catch(e){if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);throw e;}
+     return;
+   }
+   if(size==='58mm'||size==='80mm')return kpMobileBluetoothPrintBill(size);
+   kpCloseBluetoothPrintFlowUI();toast('Available printer select pannunga');return printCurrentBill();
+ }catch(e){console.error(e);if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);toast('Print open aagala — try again');}
+};
+</script>
+
+</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print();},180);
 }
 const _normalPrintBarcodeLabels=printBarcodeLabels;
 printBarcodeLabels=function(){if(isAnyBarcodeMode()){if(!selectedBarcodeProduct){toast('Select a product first');return;}const qty=Math.max(1,Math.min(500,parseInt(document.getElementById('labelQty').value||1,10)));return anyBarcodePrintDocument(Array.from({length:qty},()=>anyBarcodeOneLabel(selectedBarcodeProduct)).join(''));}if(!isJewelleryMode())return _normalPrintBarcodeLabels();if(!selectedBarcodeProduct){toast('Select a product first');return;}const qty=Math.max(1,Math.min(500,parseInt(document.getElementById('labelQty').value||1,10)));jewelleryPrintDocument(Array.from({length:qty},()=>jewelleryOneLabel(selectedBarcodeProduct)).join(''));};
@@ -4462,6 +4693,83 @@ async function kpPrintLabelJobs(jobs){
 async function kpMobileBluetoothPrintSelectedLabels(){if(!selectedBarcodeProduct){toast('Select a product first');return}const qty=Math.max(1,Math.min(500,parseInt(document.getElementById('labelQty')?.value||1,10)));let shown=false;try{if(typeof kpShowPrintSending==='function'){kpShowPrintSending();shown=true;}await kpSleep(180);await kpPrintLabelJobs([{p:selectedBarcodeProduct,count:qty}]);if(shown&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);}catch(e){console.error(e);if(shown&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);}}
 async function kpMobileBluetoothPrintBulkLabels(){if(!bulkBarcodeItems.length){toast('Add products to bulk list');return}const jobs=bulkBarcodeItems.map(x=>({p:DB.products.find(q=>q.id===x.id),count:Math.max(1,Math.min(500,parseInt(x.qty||1,10)))})).filter(x=>x.p);let shown=false;try{if(typeof kpShowPrintSending==='function'){kpShowPrintSending();shown=true;}await kpSleep(180);await kpPrintLabelJobs(jobs);if(shown&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);}catch(e){console.error(e);if(shown&&typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);}}
 window.addEventListener('load',()=>{if(!kpBtDirectSupported()){const h=document.getElementById('kpBtHelp');if(h)h.innerHTML='iPhone/iPad detected: direct Web Bluetooth is not available in Safari/PWA. Kanakku Pulla will prepare the selected 58mm/80mm bill or label PDF and open the iOS Share sheet. Select a compatible Bluetooth thermal-printer app there. Bill: <b>Receipt Mode</b>. Label: <b>Label Mode / TSPL</b>.'}});
+</script>
+
+
+<!-- KANAKKU PULLA PRO V6 — unified barcode print flow -->
+<div class="bill-action-overlay" id="kpBarcodePrintFlow" onclick="if(event.target===this)kpCloseBarcodePrintFlowUI()">
+  <div class="bill-action-modal" style="width:min(520px,94vw)">
+    <div class="bill-action-head"><div><div style="font-size:10px;color:var(--accent);font-weight:900;letter-spacing:.8px">PRINT BARCODE LABEL</div><h3>Select Printer / Paper</h3></div><button class="bill-action-close" onclick="kpCloseBarcodePrintFlowUI()" type="button">×</button></div>
+    <div id="kpBarcodePaperStep" style="padding:16px;display:grid;gap:10px">
+      <button class="btn btn-primary" onclick="kpChooseBarcodePrintRoute('58mm')" type="button">58mm Thermal / Label Printer</button>
+      <button class="btn btn-primary" onclick="kpChooseBarcodePrintRoute('80mm')" type="button">80mm Thermal / Label Printer</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('auto')" type="button">Auto / System Printer</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('a4')" type="button">A4</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('a5')" type="button">A5</button>
+      <button class="btn btn-dark" onclick="kpChooseBarcodePrintRoute('letter')" type="button">Letter</button>
+      <div style="font-size:11px;line-height:1.5;color:var(--muted);text-align:center">Bill print மாதிரி same flow. Next screen-la barcode preview + Print button varum.</div>
+    </div>
+    <div id="kpBarcodePreviewStep" style="padding:16px;display:none;gap:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b id="kpBarcodePreviewTitle">Barcode Print Preview</b><button class="btn btn-dark" type="button" onclick="kpBarcodeBackToPaperStep()">← Change</button></div>
+      <div style="background:#eef2f7;border-radius:12px;padding:10px;max-height:46vh;overflow:auto"><div id="kpBarcodePreviewHost" style="background:#fff;color:#000;margin:auto;min-height:80px"></div></div>
+      <div id="kpBarcodeRouteNote" style="font-size:12px;line-height:1.5;color:var(--muted);text-align:center"></div>
+      <button class="btn btn-primary" style="width:100%;font-size:16px;padding:14px" type="button" onclick="kpConfirmBarcodePrintUI()">🖨️ Print</button>
+    </div>
+  </div>
+</div>
+<script id="kpUnifiedBillBarcodePrintV6">
+window.kpBarcodePrintMode='selected';window.kpBarcodePrintRoute='58mm';
+window.kpBarcodeJobs=function(){
+ if(window.kpBarcodePrintMode==='bulk') return (window.bulkBarcodeItems||[]).map(function(x){return {p:DB.products.find(function(q){return q.id===x.id}),count:Math.max(1,Math.min(500,parseInt(x.qty||1,10)))}}).filter(function(x){return x.p});
+ if(!window.selectedBarcodeProduct)return [];
+ return [{p:selectedBarcodeProduct,count:Math.max(1,Math.min(500,parseInt(document.getElementById('labelQty')?.value||1,10)))}];
+};
+window.kpOpenBarcodePrintFlowUI=function(mode){
+ window.kpBarcodePrintMode=mode||'selected';var jobs=kpBarcodeJobs();if(!jobs.length){toast(mode==='bulk'?'Add products to bulk list':'Select a product first');return;}
+ var m=document.getElementById('kpBarcodePrintFlow');document.getElementById('kpBarcodePaperStep').style.display='grid';document.getElementById('kpBarcodePreviewStep').style.display='none';m.style.display='flex';m.style.zIndex='21000';m.classList.add('active');document.body.style.overflow='hidden';
+};
+window.kpCloseBarcodePrintFlowUI=function(){var m=document.getElementById('kpBarcodePrintFlow');if(m){m.classList.remove('active');m.style.display='none';}document.body.style.overflow='';};
+window.kpBarcodeBackToPaperStep=function(){document.getElementById('kpBarcodePreviewStep').style.display='none';document.getElementById('kpBarcodePaperStep').style.display='grid';};
+window.kpChooseBarcodePrintRoute=function(route){
+ window.kpBarcodePrintRoute=route;var host=document.getElementById('kpBarcodePreviewHost');host.innerHTML='';
+ try{var src=document.getElementById('labelPreviewArea');if(src){var c=src.cloneNode(true);c.removeAttribute('id');c.style.margin='0 auto';host.appendChild(c);if(typeof renderRealCode128==='function')renderRealCode128(host);}}
+ catch(e){console.error(e)}
+ var thermal=route==='58mm'||route==='80mm',ios=(typeof kpIsIOS==='function'&&kpIsIOS());
+ document.getElementById('kpBarcodePreviewTitle').textContent=(thermal?route+' Label Printer':route.toUpperCase())+' — Print Preview';
+ document.getElementById('kpBarcodeRouteNote').textContent=thermal?(ios?'iPhone: Print → iOS Share/Label Printer App → BT-58L Label Mode → Print.':'Android: Print → compatible Bluetooth label printer connect/search → direct print.'):'Print → phone system printer screen. Available printer select pannunga.';
+ document.getElementById('kpBarcodePaperStep').style.display='none';document.getElementById('kpBarcodePreviewStep').style.display='grid';
+};
+window.kpConfirmBarcodePrintUI=async function(){
+ var jobs=kpBarcodeJobs(),route=window.kpBarcodePrintRoute||'58mm';if(!jobs.length){toast('No labels to print');return;}
+ try{
+   if(route==='58mm'||route==='80mm'){
+     if(typeof kpIsIOS==='function'&&kpIsIOS()){
+       /* Keep iOS share inside the user's Print tap; no delayed redirect. */
+       if(typeof kpShowPrintSending==='function')kpShowPrintSending();
+       try{await kpShareLabelJobs(jobs);if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);}catch(e){if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);throw e;}
+       return;
+     }
+     if(window.kpBarcodePrintMode==='bulk')return kpMobileBluetoothPrintBulkLabels();
+     return kpMobileBluetoothPrintSelectedLabels();
+   }
+   kpCloseBarcodePrintFlowUI();toast('Available printer select pannunga');
+   if(window.kpBarcodePrintMode==='bulk')return printBulkBarcodeLabels();
+   return printBarcodeLabels();
+ }catch(e){console.error(e);toast('Barcode print open aagala — try again');}
+};
+/* iPhone bill: open Share/Printer App directly from the final Print tap. Android stays on direct Bluetooth. */
+window.kpConfirmBluetoothPrintUI=async function(){
+ var size=window.kpPendingPrintSize||'58mm';
+ try{
+   if((size==='58mm'||size==='80mm') && typeof kpIsIOS==='function' && kpIsIOS()){
+     if(typeof kpShowPrintSending==='function')kpShowPrintSending();
+     try{await shareCurrentBillFile();if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(true);}catch(e){if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);throw e;}
+     return;
+   }
+   if(size==='58mm'||size==='80mm')return kpMobileBluetoothPrintBill(size);
+   kpCloseBluetoothPrintFlowUI();toast('Available printer select pannunga');return printCurrentBill();
+ }catch(e){console.error(e);if(typeof kpFinishPrintSending==='function')kpFinishPrintSending(false);toast('Print open aagala — try again');}
+};
 </script>
 
 </body></html>
