@@ -1,4 +1,4 @@
-const CACHE='kanakku-pulla-pro-v7-mobile-print-preview-flow';
+const CACHE='kanakku-pulla-pro-v6-ios-bill-label-route';
 const CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./activate-design.webp','./shop-design.webp','./refresh-buffer-logo.jpeg'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
