@@ -4078,20 +4078,40 @@ function selectTab(tab){
   const el=document.getElementById('tab-'+tab); if(el) el.classList.add('active');
 }
 
+function kpResetRemovedDeviceActivation(){
+  // Backend is the source of truth. If Admin removes this activated-device row,
+  // clear the old device/shop identity so this same browser starts fresh.
+  const s=loadState();
+  const keepDeviceId=s.deviceId||ensureDeviceId();
+  saveState({deviceId:keepDeviceId,activated:false});
+  const keys=[
+    'kp_pro_device_activated_v1','kp_device_shop_binding_v1','kp_pro_device_binding_v1',
+    'kp_pro_cloud_shop_id','kp_pro_access_context','kp_pro_owner_logged_in',
+    'kp_pro_shop_created','kp_pro_joined_staff','kp_pro_joined_shop','kp_staff_auth_v1',
+    'kp_pending_create_shop','kp_pending_join','kp_pro_shop_profile','kanakkuProDB_v1'
+  ];
+  keys.forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
+  try{kpSb.auth.signOut()}catch(e){}
+  kpApplyBoundLoginUI();
+  const input=document.getElementById('activationCode');if(input)input.value='';
+  showScreen('activate');
+}
+
 async function kpValidateStoredActivation(showMessage=true){
   const s=loadState();
   if(!s.activated||!s.activationCode)return false;
   try{
-    const {data,error}=await kpSb.rpc('verify_activation',{p_code:s.activationCode,p_device_id:s.deviceId||ensureDeviceId()});
+    // IMPORTANT: validation must never recreate a device row that Admin deleted.
+    // Initial activation uses verify_activation(); reopen checks use this read-only validator.
+    const {data,error}=await kpSb.rpc('validate_device_activation',{p_code:s.activationCode,p_device_id:s.deviceId||ensureDeviceId()});
     // A temporary network/API error must never forget an already activated device.
     if(error||!data){
       if(showMessage) toast('Connection issue — this device remains activated');
       return true;
     }
-    // Only an explicit backend rejection may revoke local activation.
     if(!data.ok){
-      s.activated=false;saveState(s);try{localStorage.removeItem('kp_pro_device_activated_v1')}catch(e){};showScreen('activate');
-      if(showMessage) toast(data.error||'Trial / Activation expired');
+      kpResetRemovedDeviceActivation();
+      if(showMessage) toast(data.error||'Activation removed — activate this device again');
       return false;
     }
     kpApplyActivationMeta(s,data); saveState(s); kpRenderTrialTimer();
@@ -4164,11 +4184,15 @@ document.getElementById('kpStaffLoginMobile').addEventListener('keydown',e=>{if(
 document.getElementById('activationCode').addEventListener('keydown',e=>{if(e.key==='Enter') activateDevice();});
 refreshActivationUI();
 selectTab('login');
-// On every normal open/reopen, an already activated device skips Activation.
-// Backend verification continues silently; only an explicit rejection can revoke it.
-if(loadState().activated && loadState().activationCode){setTimeout(kpRouteBoundDevice,0)}
-else{showScreen('activate')}
-setTimeout(()=>{if(loadState().activated)kpValidateStoredActivation(false)},1200);
+// On every open/reopen, validate with backend BEFORE routing past Activation.
+// If Admin deleted this device activation, the same installed PWA returns to Activation immediately.
+(async()=>{
+  const s=loadState();
+  if(s.activated&&s.activationCode){
+    const valid=await kpValidateStoredActivation(false);
+    if(valid)await kpRouteBoundDevice();
+  }else showScreen('activate');
+})();
 setInterval(()=>{if(loadState().activated)kpValidateStoredActivation(true)},300000);
 
 
