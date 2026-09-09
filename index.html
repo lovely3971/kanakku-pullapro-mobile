@@ -282,7 +282,7 @@ body.kp-owner-bound #screenLogin .lpActions{grid-template-columns:1fr!important}
       <div class="lpField"><label>Password <span style="color:#5eaa17">*</span></label><div class="lpPwd"><input id="lpPassword" type="password" autocomplete="current-password" placeholder="Enter Password"><button class="lpEye" type="button" onclick="lpTogglePwd()" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
       <div style="text-align:right;margin-top:2px;margin-bottom:10px"><button type="button" onclick="lpForgotPassword()" style="border:0;background:transparent;color:#67b91f;font-weight:900;font-size:14px;cursor:pointer;padding:6px 2px;text-decoration:underline;text-underline-offset:3px">Forgot Password?</button></div>
       <div id="lpMessage" class="lpMsg"></div>
-      <div class="lpActions"><button class="lpBtn lpBack" type="button" onclick="showScreen('shop')">Back</button><button class="lpBtn lpMain" type="button" onclick="lpLogin()">LOGIN</button></div>
+      <div class="lpActions"><button class="lpBtn lpBack" type="button" onclick="kpBackFromLogin()">Back</button><button class="lpBtn lpMain" type="button" onclick="lpLogin()">LOGIN</button></div>
       <div class="lpFooter">A LOVELY SHOPPE BRAND • BILLING SOFTWARE</div>
     </div>
   </div>
@@ -4136,7 +4136,21 @@ function kpOwnerBoundEmail(){
   const b=kpGetDeviceBinding(); if(b&&b.role==='owner'&&b.email)return String(b.email).toLowerCase();
   try{const p=JSON.parse(localStorage.getItem('kp_pro_shop_profile')||'{}')||{};return String(p.email||'').toLowerCase()}catch(e){return ''}
 }
-function kpApplyBoundLoginUI(){const b=kpGetDeviceBinding();document.body.classList.toggle('kp-owner-bound',!!(b&&b.role==='owner'))}
+function kpOwnerShopSetupComplete(){
+  const b=kpGetDeviceBinding();
+  return !!(b&&b.role==='owner'&&localStorage.getItem('kp_pro_shop_created')==='true');
+}
+function kpApplyBoundLoginUI(){
+  // Hide Login Back only after this device really has a completed owner shop setup.
+  // A stale Supabase session/binding after an admin-side device deletion must not trap the user on Login.
+  document.body.classList.toggle('kp-owner-bound',kpOwnerShopSetupComplete());
+}
+function kpBackFromLogin(){
+  const s=loadState();
+  if(!s.activated||!s.activationCode){showScreen('activate');return;}
+  if(localStorage.getItem('kp_pro_shop_created')!=='true'){showScreen('createshop');return;}
+  showScreen('shop');
+}
 async function kpRouteBoundDevice(){
   const s=loadState();
   if(!s.activated||!s.activationCode){showScreen('activate');return}
