@@ -4696,4 +4696,43 @@ if('serviceWorker' in navigator){
 }
 </script>
 
+
+<!-- USER FINAL SMALL FIX: compact Back/Refresh + Bulk Clear resets preview -->
+<style id="kpFinalCompactNavBulkPreviewFix">
+#kpBillingFloatNav{
+  width:min(238px,66vw)!important;
+  gap:6px!important;
+  bottom:max(8px,env(safe-area-inset-bottom))!important;
+}
+.kpBillingFloatBtn{
+  min-height:34px!important;
+  padding:7px 10px!important;
+  border-radius:10px!important;
+  font-size:12px!important;
+  line-height:1!important;
+  box-shadow:0 4px 12px rgba(0,0,0,.30)!important;
+}
+@media(min-width:768px){#kpBillingFloatNav{width:min(250px,32vw)!important}}
+</style>
+<script id="kpFinalBulkPreviewClearFix">
+(function(){
+  function kpResetBulkPreviewToIdle(){
+    const area=document.getElementById('labelPreviewArea');
+    const scroller=document.getElementById('barcodePreviewScroller');
+    const status=document.getElementById('barcodePreviewStatus');
+    if(scroller)scroller.classList.remove('bulk-scroll');
+    if(area){
+      area.classList.remove('bulk-preview-mode','jewel-preview-wrap','any-barcode-wrap');
+      area.innerHTML='<span style="color:#888;padding:18px">Add bulk products and click Preview Labels</span>';
+    }
+    if(status)status.textContent='Bulk preview cleared';
+  }
+  const oldClear=window.clearBulkBarcodeItems;
+  window.clearBulkBarcodeItems=function(){
+    if(typeof oldClear==='function') oldClear();
+    else { bulkBarcodeItems=[]; if(typeof renderBulkBarcodeList==='function')renderBulkBarcodeList(); }
+    kpResetBulkPreviewToIdle();
+  };
+})();
+</script>
 </body></html>
