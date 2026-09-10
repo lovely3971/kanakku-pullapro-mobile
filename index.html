@@ -232,6 +232,13 @@ body.kp-owner-bound #screenLogin .lpActions{grid-template-columns:1fr!important}
 @media (prefers-reduced-motion:reduce){#kpBootGate *{animation-duration:.01ms!important;animation-delay:0ms!important}}
 </style>
 
+
+<style id="kpBackRefreshApprovedStyleV1">
+#kpBillingFloatNav{bottom:max(10px,env(safe-area-inset-bottom));width:min(310px,78vw);gap:8px;}
+.kpBillingFloatBtn{min-height:40px;border:1px solid rgba(183,255,34,.42);border-radius:12px;background:rgba(7,16,7,.96);color:#b7ff22;font:900 13px/1 system-ui,-apple-system,Arial,sans-serif;box-shadow:0 7px 20px rgba(0,0,0,.34);}
+.kpBillingFloatBtn:active{background:#102010;transform:scale(.985)}
+@media(min-width:768px){#kpBillingFloatNav{width:min(340px,42vw)}}
+</style>
 </head><body>
 <div id="kpBootGate" aria-label="Kanakku Pulla PRO loading">
   <div class="kpBootInner">
@@ -788,7 +795,7 @@ body[data-kp-light-theme="1"] tr:hover td{background:rgba(var(--accent-rgb),.06)
 .barcode-pad .barcode-hold{background:var(--surface2)!important;color:var(--text)!important;border:1px solid var(--border)!important;box-shadow:none!important;}
 </style><style id="barcodeMmBulkFix">
 .barcode-mm-readout{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 2px}.barcode-mm-readout span{border:1px solid var(--line-soft);background:#091109;border-radius:8px;padding:6px 9px;font-size:11px;color:var(--text-dim)}
-.barcode-preview-pro{background:#dfe3df!important;border-radius:12px;padding:16px!important;overflow:auto!important}.barcode-sheet-pro{background:#fff!important;min-height:28mm;padding:4mm!important;border-radius:8px!important;box-shadow:0 4px 18px rgba(0,0,0,.28)!important;width:max-content!important;min-width:115mm!important}
+.barcode-preview-pro{background:#dfe3df!important;border-radius:12px;padding:16px!important;overflow:auto!important}.barcode-sheet-pro{background:#fff!important;min-height:28mm;padding:4mm!important;border-radius:8px!important;box-shadow:0 4px 18px rgba(0,0,0,.28)!important;width:max-content!important;min-width:0!important}
 #bulkBarcodeList .bulk-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line-soft);border-radius:9px;margin-top:7px;background:#091109}#bulkBarcodeList .bulk-row b{font-size:12px}#bulkBarcodeList .bulk-row span{font-size:11px;color:var(--text-dim)}#bulkBarcodeList .bulk-row button{min-height:30px;padding:4px 9px}
 .barcode-hold{touch-action:none;user-select:none;-webkit-user-select:none}
 /* Physical labels are always white + black, independent of the green app theme. */
@@ -798,7 +805,7 @@ body[data-kp-light-theme="1"] tr:hover td{background:rgba(var(--accent-rgb),.06)
 #labelPreviewArea .kp-shop,#labelPreviewArea .kp-code,#labelPreviewArea .kp-pcs,#labelPreviewArea .kp-variant,#labelPreviewArea .kp-price{color:#000!important;text-shadow:none!important}
 #labelPreviewArea.bulk-preview-mode{grid-template-columns:35mm 35mm 35mm!important;grid-auto-rows:22mm!important;row-gap:2mm!important;align-content:start!important}
 .barcode-preview-pro.bulk-scroll{max-height:68vh;overflow:auto!important}
-.barcode-preview-status{margin-top:10px;padding:9px 12px;border:1px solid var(--line-soft);border-radius:10px;background:#091109;color:var(--text-dim);font-size:11.5px;font-weight:800}
+.barcode-preview-status{margin-top:8px;padding:6px 9px;border:1px solid var(--line-soft);border-radius:9px;background:#091109;color:var(--text-dim);font-size:10.5px;font-weight:800;white-space:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
 </style><style id="kpJewelleryTagSafeStyles">
 .jewel-settings{display:none;margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#071007}
 .jewel-settings.active{display:block}.jewel-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.jewel-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
@@ -815,7 +822,7 @@ body[data-kp-light-theme="1"] tr:hover td{background:rgba(var(--accent-rgb),.06)
 .kp-bars rect{shape-rendering:crispEdges;}
 #labelPreviewArea .kp-bars{background:none!important;color:#000!important;}
 </style><style id="kpAnyBarcodeLabelStyles">
-.any-barcode-wrap{display:grid;grid-template-columns:repeat(var(--any-up,1),max-content);column-gap:var(--any-gap,3mm);row-gap:2mm;align-items:start;width:max-content;min-width:100%;background:#fff!important;padding:4mm!important;box-sizing:border-box}
+.any-barcode-wrap{display:grid;grid-template-columns:repeat(var(--any-up,1),max-content);column-gap:var(--any-gap,3mm);row-gap:2mm;align-items:start;width:max-content;min-width:0;background:#fff!important;padding:4mm!important;box-sizing:border-box}
 .any-label{position:relative;box-sizing:border-box;background:#fff!important;color:#000!important;border:1px solid #cbd5e1;border-radius:1mm;overflow:hidden;flex:none;font-family:Arial,sans-serif}
 .any-label .kp-el{position:absolute!important;margin:0!important;color:#000!important;box-sizing:border-box;z-index:2}
 .any-label .any-barcode-box{position:absolute!important;overflow:visible!important;z-index:1}
@@ -936,6 +943,16 @@ body[data-kp-light-theme="1"] tr:hover td{background:rgba(var(--accent-rgb),.06)
   .kp-desktop-logout{display:none!important}
   .nav-scroll{display:none!important}
   #kpUniversalBackFab{display:flex!important}
+}
+</style>
+<style id="kpUserRequestedUiPatchV1">
+/* User-approved small UI corrections only: no print/data/business logic changes. */
+#page-barcodes #barcodePreviewScroller{padding:10px!important;}
+#page-barcodes #labelPreviewArea{width:max-content!important;min-width:0!important;margin-left:auto!important;margin-right:auto!important;}
+#page-barcodes #labelPreviewArea.any-barcode-wrap{min-width:0!important;width:max-content!important;}
+#page-barcodes #labelPreviewArea.barcode-sheet-pro{min-width:0!important;width:max-content!important;}
+@media(max-width:600px){
+  #page-barcodes #barcodePreviewScroller{padding:8px!important;}
 }
 </style>
 </head>
@@ -1453,7 +1470,7 @@ body[data-kp-light-theme="1"] tr:hover td{background:rgba(var(--accent-rgb),.06)
 <h3 class="block-title" id="barcodePreviewTitle">2. Live Preview</h3>
 <div class="barcode-preview-pro" id="barcodePreviewScroller"><div class="barcode-sheet-pro" id="labelPreviewArea"><span style="color:#888;padding:18px">Select a product to preview labels</span></div></div>
 <div class="barcode-preview-status" id="barcodePreviewStatus">Live Design Preview • 3-UP • 35 × 22 mm • 115 mm Roll Width</div>
-<div class="tip" style="margin-top:12px">This preview reflects the sample product, PCS text and current alignment in real time.</div>
+
 </div></div>
 <div class="card" style="margin-top:14px">
 <h3 class="block-title">3. Label Design &amp; Alignment</h3>
@@ -1848,6 +1865,8 @@ document.querySelectorAll('#mainNav .nav-btn').forEach(btn=>{
 window.kpPageHistory=window.kpPageHistory||[];
 window.kpCurrentPage=window.kpCurrentPage||'dashboard';
 function goTo(page, el, fromBack){
+  // USER FIX: any page selection must fully dismiss the mobile sidebar first.
+  try{const side=document.getElementById('kpSidebar');if(side&&side.classList.contains('open')&&typeof closeKpSidebar==='function')closeKpSidebar();}catch(e){}
   if(!kpAllowedPage(page)){toast('Access not permitted');return;}
   if(!fromBack && window.kpCurrentPage && window.kpCurrentPage!==page){
     window.kpPageHistory.push(window.kpCurrentPage);
@@ -3972,8 +3991,13 @@ function closeKpSidebar(){
   kpBackPop('sidebar');
 }
 function kpSidebarGoTo(page,el){
-  goTo(page,document.querySelector('#mainNav [data-page="'+page+'"]'));
+  // Close first so the selected page is immediately fully visible.
   closeKpSidebar();
+  requestAnimationFrame(()=>{
+    goTo(page,document.querySelector('#mainNav [data-page="'+page+'"]'));
+    closeKpSidebar();
+    window.scrollTo({top:0,behavior:'auto'});
+  });
 }
 function kpSidebarLogout(){
   closeKpSidebar();
